@@ -39,7 +39,7 @@ const durationLabel = computed(() => formatTimestamp(props.video.durationSeconds
             <h2 id="video-summary-title" class="mt-2 text-lg font-semibold leading-6 tracking-tight text-foreground">
                 {{ video.title }}
             </h2>
-            <p class="mt-2 text-sm text-muted-foreground">{{ video.channelName }}</p>
+            <p v-if="video.channelName" class="mt-2 text-sm text-muted-foreground">{{ video.channelName }}</p>
 
             <dl class="mt-5 divide-y divide-border border-y border-border text-xs">
                 <div class="flex items-start justify-between gap-4 py-3">

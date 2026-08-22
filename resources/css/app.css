@@ -16,6 +16,9 @@
     --accent: #d92727;
     --accent-hover: #b91f1f;
     --accent-foreground: #ffffff;
+    --action: #b91c1c;
+    --action-hover: #991b1b;
+    --action-foreground: #ffffff;
     --destructive: #b91c1c;
 }
 
@@ -26,9 +29,12 @@
     --muted-foreground: #a1a1aa;
     --border: #2d2d32;
     --card: #141416;
-    --accent: #ef4444;
-    --accent-hover: #f05a5a;
+    --accent: #f87171;
+    --accent-hover: #fca5a5;
     --accent-foreground: #ffffff;
+    --action: #c81e1e;
+    --action-hover: #a91919;
+    --action-foreground: #ffffff;
     --destructive: #f87171;
 }
 
@@ -44,6 +50,9 @@
     --color-accent: var(--accent);
     --color-accent-hover: var(--accent-hover);
     --color-accent-foreground: var(--accent-foreground);
+    --color-action: var(--action);
+    --color-action-hover: var(--action-hover);
+    --color-action-foreground: var(--action-foreground);
     --color-destructive: var(--destructive);
 }
 

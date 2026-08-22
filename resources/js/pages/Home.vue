@@ -105,7 +105,7 @@ const quotaMessage = () => {
                         <button
                             ref="submitButton"
                             type="submit"
-                            class="h-14 shrink-0 bg-accent px-8 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
+                            class="h-14 shrink-0 bg-action px-8 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
                             :disabled="form.processing"
                         >
                             {{ form.processing ? 'Enviando...' : 'Extrair' }}

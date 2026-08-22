@@ -29,6 +29,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    libraryUrl: {
+        type: String,
+        default: null,
+    },
 });
 
 const pollingStatuses = new Set(['pending', 'processing']);
@@ -83,7 +87,7 @@ const runPoll = () => {
 
     pollInFlight = true;
     router.reload({
-        only: ['extraction', 'video', 'transcript', 'failureMessage', 'downloadUrl'],
+        only: ['extraction', 'video', 'transcript', 'failureMessage', 'downloadUrl', 'libraryUrl'],
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
@@ -131,7 +135,13 @@ onBeforeUnmount(() => {
     </Head>
 
     <PublicLayout :app-name="appName">
-        <TranscriptResult v-if="hasReadyResult" :transcript="transcript" :video="video" :download-url="downloadUrl" />
+        <TranscriptResult
+            v-if="hasReadyResult"
+            :transcript="transcript"
+            :video="video"
+            :download-url="downloadUrl"
+            :library-url="libraryUrl"
+        />
 
         <section v-else class="flex flex-1 items-center border-b border-border bg-background">
             <div class="mx-auto flex w-full max-w-3xl items-center px-5 py-16 sm:px-8 sm:py-20">
@@ -165,7 +175,7 @@ onBeforeUnmount(() => {
                         </p>
                         <Link
                             href="/"
-                            class="mt-8 inline-flex h-11 items-center bg-accent px-5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+                            class="mt-8 inline-flex h-11 items-center bg-action px-5 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover"
                         >
                             Voltar à página inicial
                         </Link>

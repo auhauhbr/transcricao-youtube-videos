@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
 import TranscriptDownloadDialog from './TranscriptDownloadDialog.vue';
@@ -17,6 +18,18 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    backUrl: {
+        type: String,
+        default: '/',
+    },
+    backLabel: {
+        type: String,
+        default: 'Voltar',
+    },
+    libraryUrl: {
+        type: String,
+        default: null,
+    },
 });
 
 const copyMessage = ref('');
@@ -29,7 +42,7 @@ const blockElements = new Map();
 let scrollCancellationFrame = null;
 const fullTranscript = computed(() => props.transcript.blocks.map((block) => block.text).join('\n\n'));
 const languageLabel = computed(() => props.transcript.languageName || props.transcript.languageCode);
-const sourceLabel = computed(() => (props.transcript.source === 'manual' ? 'Legendas do vídeo' : 'Legendas automáticas'));
+const sourceLabel = computed(() => props.transcript.sourceLabel || (props.transcript.source === 'manual' ? 'Legendas manuais' : 'Legendas automáticas'));
 const activeBlockPosition = computed(() => {
     const time = currentTimeMs.value;
     const blocks = props.transcript.blocks;
@@ -192,14 +205,25 @@ const copyTranscript = async () => {
     <article class="flex-1 bg-background">
         <div class="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <header class="border-b border-border pb-7">
-                <a href="/" class="inline-flex text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">← Voltar</a>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <Link :href="backUrl" class="inline-flex text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                        ← {{ backLabel }}
+                    </Link>
+                    <Link
+                        v-if="libraryUrl"
+                        :href="libraryUrl"
+                        class="inline-flex h-10 items-center border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                    >
+                        Abrir na biblioteca
+                    </Link>
+                </div>
                 <div class="mt-6 min-w-0 max-w-5xl">
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Transcrição pronta</p>
                     <h1 class="mt-3 text-3xl font-semibold leading-tight tracking-[-0.035em] text-foreground sm:text-4xl">
                         {{ video.title }}
                     </h1>
                     <p class="mt-3 text-sm text-muted-foreground sm:text-base">
-                        {{ video.channelName }} · {{ formatTimestamp(video.durationSeconds * 1000) }} · {{ languageLabel }}
+                        <template v-if="video.channelName">{{ video.channelName }} · </template>{{ formatTimestamp(video.durationSeconds * 1000) }} · {{ languageLabel }}
                     </p>
                 </div>
             </header>
@@ -249,7 +273,7 @@ const copyTranscript = async () => {
                             <TranscriptDownloadDialog :download-url="downloadUrl" />
                             <button
                                 type="button"
-                                class="inline-flex h-10 items-center justify-center bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+                                class="inline-flex h-10 items-center justify-center bg-action px-4 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover"
                                 @click="copyTranscript"
                             >
                                 Copiar tudo
