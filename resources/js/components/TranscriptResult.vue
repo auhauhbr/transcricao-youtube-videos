@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
 import VideoSummaryCard from './VideoSummaryCard.vue';
 
@@ -16,21 +16,154 @@ const props = defineProps({
 
 const copyMessage = ref('');
 const copyFailed = ref(false);
-const fullTranscript = computed(() => props.transcript.segments.map((segment) => segment.text).join('\n\n'));
+const autoscrollEnabled = ref(false);
+const currentTimeMs = ref(null);
+const transcriptPanel = ref(null);
+const videoCard = ref(null);
+const blockElements = new Map();
+let scrollCancellationFrame = null;
+const fullTranscript = computed(() => props.transcript.blocks.map((block) => block.text).join('\n\n'));
 const languageLabel = computed(() => props.transcript.languageName || props.transcript.languageCode);
 const sourceLabel = computed(() => (props.transcript.source === 'manual' ? 'Legendas do vídeo' : 'Legendas automáticas'));
+const activeBlockPosition = computed(() => {
+    const time = currentTimeMs.value;
+    const blocks = props.transcript.blocks;
 
-const segmentAnchorFor = (startMs) => {
-    const segment = props.transcript.segments.find((item) => item.startMs >= startMs) ?? props.transcript.segments.at(-1);
+    if (!Number.isFinite(time) || blocks.length === 0) {
+        return null;
+    }
 
-    return segment ? `#segment-${segment.position}` : '#transcript-title';
+    let low = 0;
+    let high = blocks.length - 1;
+    let candidate = null;
+
+    while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+
+        if (blocks[middle].startMs <= time) {
+            candidate = blocks[middle];
+            low = middle + 1;
+        } else {
+            high = middle - 1;
+        }
+    }
+
+    return candidate && time < candidate.endMs ? candidate.position : null;
+});
+
+const setBlockElement = (position, element) => {
+    if (element) {
+        blockElements.set(position, element);
+        return;
+    }
+
+    blockElements.delete(position);
 };
 
-const youtubeTimestampUrl = (startMs) => {
-    const seconds = Math.max(0, Math.floor(Number(startMs) / 1000));
+const panelCanScroll = (panel) => {
+    const overflow = window.getComputedStyle(panel).overflowY;
 
-    return `${props.video.youtubeUrl}&t=${seconds}s`;
+    return panel.scrollHeight > panel.clientHeight && ['auto', 'scroll'].includes(overflow);
 };
+
+const cancelAutoscrollMotion = () => {
+    const panel = transcriptPanel.value;
+    const usePanel = panel && panelCanScroll(panel);
+    const lockedPosition = usePanel ? panel.scrollTop : window.scrollY;
+    const stopAtCurrentPosition = () => {
+        if (usePanel && panel) {
+            panel.scrollTo({ top: lockedPosition, behavior: 'instant' });
+        } else {
+            window.scrollTo({ top: lockedPosition, behavior: 'instant' });
+        }
+    };
+
+    stopAtCurrentPosition();
+
+    if (scrollCancellationFrame !== null) {
+        window.cancelAnimationFrame(scrollCancellationFrame);
+    }
+
+    scrollCancellationFrame = window.requestAnimationFrame(() => {
+        if (!autoscrollEnabled.value) {
+            stopAtCurrentPosition();
+        }
+
+        scrollCancellationFrame = null;
+    });
+};
+
+const scrollToBlock = async (position) => {
+    await nextTick();
+
+    const panel = transcriptPanel.value;
+    const element = blockElements.get(position);
+
+    if (!panel || !element) {
+        return;
+    }
+
+    const panelBounds = panel.getBoundingClientRect();
+    const elementBounds = element.getBoundingClientRect();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!panelCanScroll(panel)) {
+        element.scrollIntoView({
+            behavior: reduceMotion ? 'auto' : 'smooth',
+            block: 'center',
+        });
+
+        return;
+    }
+
+    if (elementBounds.top >= panelBounds.top && elementBounds.bottom <= panelBounds.bottom) {
+        return;
+    }
+
+    panel.scrollTo({
+        top: panel.scrollTop + elementBounds.top - panelBounds.top - panel.clientHeight / 2 + elementBounds.height / 2,
+        behavior: reduceMotion ? 'auto' : 'smooth',
+    });
+};
+
+const seekTo = (startMs) => {
+    const safeStartMs = Math.max(0, Number(startMs) || 0);
+    currentTimeMs.value = safeStartMs;
+    videoCard.value?.seekTo(safeStartMs / 1000, true);
+};
+
+const updateCurrentTime = (seconds) => {
+    const numericSeconds = Number(seconds);
+
+    if (Number.isFinite(numericSeconds)) {
+        currentTimeMs.value = numericSeconds * 1000;
+    }
+};
+
+const toggleAutoscroll = () => {
+    autoscrollEnabled.value = !autoscrollEnabled.value;
+
+    if (autoscrollEnabled.value && activeBlockPosition.value !== null) {
+        scrollToBlock(activeBlockPosition.value);
+        return;
+    }
+
+    if (!autoscrollEnabled.value && transcriptPanel.value) {
+        cancelAutoscrollMotion();
+    }
+};
+
+watch(activeBlockPosition, (position, previousPosition) => {
+    if (autoscrollEnabled.value && position !== null && position !== previousPosition) {
+        scrollToBlock(position);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (scrollCancellationFrame !== null) {
+        window.cancelAnimationFrame(scrollCancellationFrame);
+    }
+});
 
 const copyTranscript = async () => {
     copyMessage.value = '';
@@ -68,7 +201,7 @@ const copyTranscript = async () => {
 
             <div class="mt-7 grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-8">
                 <aside class="space-y-5 lg:sticky lg:top-24">
-                    <VideoSummaryCard :video="video" />
+                    <VideoSummaryCard ref="videoCard" :video="video" @time-update="updateCurrentTime" />
 
                     <nav v-if="transcript.chapters.length" class="border border-border bg-card p-5" aria-labelledby="chapters-title">
                         <div class="flex items-center justify-between gap-4">
@@ -77,13 +210,15 @@ const copyTranscript = async () => {
                         </div>
                         <ol class="mt-3 divide-y divide-border">
                             <li v-for="chapter in transcript.chapters" :key="chapter.position">
-                                <a
-                                    :href="segmentAnchorFor(chapter.startMs)"
-                                    class="grid grid-cols-[48px_minmax(0,1fr)] gap-2 py-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                <button
+                                    type="button"
+                                    class="grid w-full grid-cols-[48px_minmax(0,1fr)] gap-2 py-3 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                    :aria-label="`Reproduzir o capítulo ${chapter.title} em ${formatTimestamp(chapter.startMs)}`"
+                                    @click="seekTo(chapter.startMs)"
                                 >
                                     <span class="font-mono text-xs font-semibold text-accent">{{ formatTimestamp(chapter.startMs) }}</span>
                                     <span class="leading-5">{{ chapter.title }}</span>
-                                </a>
+                                </button>
                             </li>
                         </ol>
                     </nav>
@@ -97,13 +232,23 @@ const copyTranscript = async () => {
                                 {{ languageLabel }} · {{ sourceLabel }} · {{ transcript.wordCount.toLocaleString('pt-BR') }} palavras
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            class="inline-flex h-10 shrink-0 items-center justify-center bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
-                            @click="copyTranscript"
-                        >
-                            Copiar tudo
-                        </button>
+                        <div class="flex shrink-0 flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                class="inline-flex h-10 items-center justify-center border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                                :aria-pressed="autoscrollEnabled"
+                                @click="toggleAutoscroll"
+                            >
+                                Autoscroll: {{ autoscrollEnabled ? 'ON' : 'OFF' }}
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex h-10 items-center justify-center bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+                                @click="copyTranscript"
+                            >
+                                Copiar tudo
+                            </button>
+                        </div>
                     </div>
 
                     <p
@@ -115,24 +260,24 @@ const copyTranscript = async () => {
                         {{ copyMessage }}
                     </p>
 
-                    <div class="divide-y divide-border lg:max-h-[calc(100vh-15rem)] lg:min-h-[30rem] lg:overflow-y-auto">
-                        <div
-                            v-for="segment in transcript.segments"
-                            :id="`segment-${segment.position}`"
-                            :key="segment.position"
-                            class="scroll-mt-24 grid grid-cols-[58px_minmax(0,1fr)] gap-3 px-4 py-3.5 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-5 sm:px-6 sm:py-4"
+                    <div ref="transcriptPanel" class="divide-y divide-border lg:max-h-[calc(100vh-15rem)] lg:min-h-[30rem] lg:overflow-y-auto">
+                        <button
+                            v-for="block in transcript.blocks"
+                            :id="`transcript-block-${block.position}`"
+                            :key="block.position"
+                            :ref="(element) => setBlockElement(block.position, element)"
+                            type="button"
+                            class="group grid w-full scroll-mt-24 grid-cols-[58px_minmax(0,1fr)] gap-3 border-l-2 border-transparent px-4 py-4 text-left transition-colors hover:bg-muted/70 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-5 sm:px-6 sm:py-5"
+                            :class="activeBlockPosition === block.position ? 'border-l-accent bg-accent/10' : ''"
+                            :aria-current="activeBlockPosition === block.position ? 'true' : undefined"
+                            :aria-label="`Reproduzir a partir de ${formatTimestamp(block.startMs)}: ${block.text}`"
+                            @click="seekTo(block.startMs)"
                         >
-                            <a
-                                :href="youtubeTimestampUrl(segment.startMs)"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="h-fit font-mono text-xs font-semibold text-accent hover:underline"
-                                :aria-label="`Abrir vídeo em ${formatTimestamp(segment.startMs)}`"
-                            >
-                                {{ formatTimestamp(segment.startMs) }}
-                            </a>
-                            <p class="min-w-0 text-sm leading-6 text-foreground/90 sm:text-[15px] sm:leading-7">{{ segment.text }}</p>
-                        </div>
+                            <span class="h-fit font-mono text-xs font-semibold text-accent group-hover:underline">
+                                {{ formatTimestamp(block.startMs) }}
+                            </span>
+                            <span class="min-w-0 text-sm leading-6 text-foreground/90 sm:text-[15px] sm:leading-7">{{ block.text }}</span>
+                        </button>
                     </div>
                 </section>
             </div>

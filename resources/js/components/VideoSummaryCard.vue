@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
+import YouTubePlayer from './YouTubePlayer.vue';
 
 const props = defineProps({
     video: {
@@ -9,42 +10,29 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['player-error', 'player-ready', 'state-change', 'time-update']);
+const player = ref(null);
+
+const seekTo = (seconds, shouldPlay = true) => player.value?.seekTo(seconds, shouldPlay) ?? false;
+
+defineExpose({ seekTo });
+
 const durationLabel = computed(() => formatTimestamp(props.video.durationSeconds * 1000));
 </script>
 
 <template>
     <section class="border border-border bg-card" aria-labelledby="video-summary-title">
-        <a
-            :href="video.youtubeUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group relative block aspect-video overflow-hidden border-b border-border bg-muted"
-            aria-label="Abrir vídeo no YouTube"
-        >
-            <img
-                v-if="video.thumbnailUrl"
-                :src="video.thumbnailUrl"
-                :alt="`Thumbnail do vídeo ${video.title}`"
-                class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+        <div class="border-b border-border">
+            <YouTubePlayer
+                ref="player"
+                :video-id="video.providerVideoId"
+                :title="video.title"
+                @error="emit('player-error')"
+                @ready="emit('player-ready')"
+                @state-change="emit('state-change', $event)"
+                @time-update="emit('time-update', $event)"
             />
-            <div v-else class="flex size-full items-center justify-center text-muted-foreground" aria-hidden="true">
-                <svg class="size-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M4 6.5h16v11H4z" />
-                    <path d="m10 9 5 3-5 3V9Z" />
-                </svg>
-            </div>
-            <span
-                class="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/75 text-white shadow-lg transition-colors group-hover:bg-accent"
-                aria-hidden="true"
-            >
-                <svg class="ml-0.5 size-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="m9 7 8 5-8 5V7Z" />
-                </svg>
-            </span>
-            <span class="absolute bottom-2 right-2 bg-black/80 px-2 py-1 font-mono text-[11px] font-semibold text-white">
-                {{ durationLabel }}
-            </span>
-        </a>
+        </div>
 
         <div class="p-5">
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Vídeo do YouTube</p>
