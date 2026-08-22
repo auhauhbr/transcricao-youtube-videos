@@ -4,9 +4,10 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { createApp, h } from 'vue';
 
 const pages = import.meta.glob('./pages/**/*.vue', { eager: true });
+const applicationName = import.meta.env.VITE_APP_NAME || 'Aplicação';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — Transcrições` : 'Transcrições'),
+    title: (title) => (title ? `${title} — ${applicationName}` : applicationName),
     resolve: (name) => {
         const page = pages[`./pages/${name}.vue`];
 

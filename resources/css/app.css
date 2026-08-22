@@ -4,7 +4,83 @@
 @source '../../storage/framework/views/*.php';
 @source '../js/**/*.vue';
 
-@theme {
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --background: #fafaf9;
+    --foreground: #18181b;
+    --muted: #f1f1ef;
+    --muted-foreground: #66666d;
+    --border: #dededb;
+    --card: #ffffff;
+    --accent: #d92727;
+    --accent-hover: #b91f1f;
+    --accent-foreground: #ffffff;
+    --destructive: #b91c1c;
+}
+
+.dark {
+    --background: #0d0d0f;
+    --foreground: #f4f4f5;
+    --muted: #1a1a1e;
+    --muted-foreground: #a1a1aa;
+    --border: #2d2d32;
+    --card: #141416;
+    --accent: #ef4444;
+    --accent-hover: #f05a5a;
+    --accent-foreground: #ffffff;
+    --destructive: #f87171;
+}
+
+@theme inline {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-border: var(--border);
+    --color-card: var(--card);
+    --color-accent: var(--accent);
+    --color-accent-hover: var(--accent-hover);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+}
+
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+
+    html {
+        background: var(--background);
+    }
+
+    body {
+        min-width: 320px;
+        background: var(--background);
+        color: var(--foreground);
+        text-rendering: optimizeLegibility;
+    }
+
+    button,
+    a,
+    input {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    ::selection {
+        background: color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
 }
