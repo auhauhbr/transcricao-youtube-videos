@@ -6,8 +6,8 @@ use App\Transcript\Data\TranscriptData;
 use App\Transcript\Exceptions\TranscriptProviderException;
 use App\Transcript\Providers\FakeTranscriptProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -84,14 +84,14 @@ test('a missing provider configuration never resolves silently to fake', functio
     expect(fn () => $this->app->make(TranscriptProvider::class))->toThrow(LogicException::class);
 });
 
-test('the transient workflow creates no transcript domain persistence', function () {
+test('the public fake workflow creates no transcript domain records', function () {
     $this->post(route('transcripts.extract'), [
         'video_url' => 'https://youtube.com/shorts/dQw4w9WgXcQ',
     ])->assertOk();
 
     expect(Video::query()->count())->toBe(0)
-        ->and(Schema::hasTable('transcripts'))->toBeFalse()
-        ->and(Schema::hasTable('transcript_segments'))->toBeFalse()
-        ->and(Schema::hasTable('chapters'))->toBeFalse()
-        ->and(Schema::hasTable('extractions'))->toBeFalse();
+        ->and(DB::table('transcripts')->count())->toBe(0)
+        ->and(DB::table('transcript_segments')->count())->toBe(0)
+        ->and(DB::table('chapters')->count())->toBe(0)
+        ->and(DB::table('extractions')->count())->toBe(0);
 });
