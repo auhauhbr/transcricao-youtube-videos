@@ -3,6 +3,7 @@
 use App\Enums\ExtractionStatus;
 use App\Jobs\ExtractTranscriptJob;
 use App\Models\Extraction;
+use App\Models\User;
 use App\Models\Video;
 use App\Transcript\Contracts\TranscriptProvider;
 use Illuminate\Cache\RateLimiter;
@@ -95,6 +96,8 @@ test('invalid extraction requests create no extraction and dispatch no job', fun
 ]);
 
 test('normal requests within the burst limit continue to work', function () {
+    $this->actingAs(User::factory()->create());
+
     foreach (range(1, 5) as $requestNumber) {
         $this->post(route('transcripts.extract'), [
             'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
@@ -106,6 +109,8 @@ test('normal requests within the burst limit continue to work', function () {
 });
 
 test('the public extraction endpoint is rate limited by IP', function () {
+    $this->actingAs(User::factory()->create());
+
     foreach (range(1, 5) as $requestNumber) {
         $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
             ->post(route('transcripts.extract'), [

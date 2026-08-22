@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\FailTranscriptExtraction;
 use App\Actions\PersistTranscriptData;
 use App\Enums\ExtractionErrorCode;
 use App\Enums\ExtractionStatus;
@@ -34,7 +35,7 @@ test('the job persists a complete transcript and marks extraction ready', functi
     $extraction = pendingExtraction();
     $job = new ExtractTranscriptJob($extraction->getKey());
 
-    $job->handle(new FakeTranscriptProvider, app(PersistTranscriptData::class));
+    $job->handle(new FakeTranscriptProvider, app(PersistTranscriptData::class), app(FailTranscriptExtraction::class));
     $extraction->refresh();
     $transcript = $extraction->transcript;
 
@@ -71,8 +72,8 @@ test('a ready job is idempotent and does not call the provider again', function 
     };
     $job = new ExtractTranscriptJob($extraction->getKey());
 
-    $job->handle($provider, app(PersistTranscriptData::class));
-    $job->handle($provider, app(PersistTranscriptData::class));
+    $job->handle($provider, app(PersistTranscriptData::class), app(FailTranscriptExtraction::class));
+    $job->handle($provider, app(PersistTranscriptData::class), app(FailTranscriptExtraction::class));
 
     expect($provider->calls)->toBe(1)
         ->and(Transcript::query()->count())->toBe(1)
@@ -85,8 +86,8 @@ test('persisting the same transcript replaces children without duplicates', func
     $provider = new FakeTranscriptProvider;
     $persister = app(PersistTranscriptData::class);
 
-    (new ExtractTranscriptJob($first->getKey()))->handle($provider, $persister);
-    (new ExtractTranscriptJob($second->getKey()))->handle($provider, $persister);
+    (new ExtractTranscriptJob($first->getKey()))->handle($provider, $persister, app(FailTranscriptExtraction::class));
+    (new ExtractTranscriptJob($second->getKey()))->handle($provider, $persister, app(FailTranscriptExtraction::class));
 
     expect(Transcript::query()->count())->toBe(1)
         ->and($first->refresh()->transcript_id)->toBe($second->refresh()->transcript_id)
@@ -131,7 +132,7 @@ test('terminal provider failures immediately mark extraction failed', function (
         }
     };
 
-    (new ExtractTranscriptJob($extraction->getKey()))->handle($provider, app(PersistTranscriptData::class));
+    (new ExtractTranscriptJob($extraction->getKey()))->handle($provider, app(PersistTranscriptData::class), app(FailTranscriptExtraction::class));
 
     expect($extraction->refresh()->status)->toBe(ExtractionStatus::Failed)
         ->and($extraction->error_code)->toBe($code)
@@ -157,7 +158,7 @@ test('retryable provider failures remain processing until final failure', functi
     };
     $job = new ExtractTranscriptJob($extraction->getKey());
 
-    expect(fn () => $job->handle($provider, app(PersistTranscriptData::class)))
+    expect(fn () => $job->handle($provider, app(PersistTranscriptData::class), app(FailTranscriptExtraction::class)))
         ->toThrow($exception::class);
 
     expect($extraction->refresh()->status)->toBe(ExtractionStatus::Processing)
