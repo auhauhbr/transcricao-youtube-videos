@@ -39,6 +39,7 @@ class ExtractionController extends Controller
                 'extraction' => $this->extractionData($extraction),
                 'video' => $this->readyVideoData($extraction),
                 'transcript' => $this->transcriptData($extraction->transcript),
+                'downloadUrl' => route('extractions.download', $extraction, absolute: false),
             ]);
         }
 

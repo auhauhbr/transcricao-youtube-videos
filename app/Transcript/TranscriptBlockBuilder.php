@@ -28,6 +28,7 @@ final class TranscriptBlockBuilder
         $blocks = [];
         $buffer = [];
         $currentChapterPosition = null;
+        $chapterIndex = 0;
 
         foreach ($orderedSegments as $segment) {
             $text = trim($segment['text']);
@@ -36,7 +37,7 @@ final class TranscriptBlockBuilder
                 continue;
             }
 
-            $chapter = $this->chapterAt($segment['startMs'], $orderedChapters);
+            $chapter = $this->chapterAt($segment['startMs'], $orderedChapters, $chapterIndex);
             $chapterPosition = $chapter['position'] ?? null;
 
             if ($buffer !== [] && $chapterPosition !== $currentChapterPosition) {
@@ -94,15 +95,17 @@ final class TranscriptBlockBuilder
      * @param  list<array{position: int, title: string, startMs: int, endMs: int}>  $chapters
      * @return array{position: int, title: string, startMs: int, endMs: int}|null
      */
-    private function chapterAt(int $startMs, array $chapters): ?array
+    private function chapterAt(int $startMs, array $chapters, int &$chapterIndex): ?array
     {
-        foreach ($chapters as $chapter) {
-            if ($startMs >= $chapter['startMs'] && $startMs < $chapter['endMs']) {
-                return $chapter;
-            }
+        while (isset($chapters[$chapterIndex]) && $startMs >= $chapters[$chapterIndex]['endMs']) {
+            $chapterIndex++;
         }
 
-        return null;
+        $chapter = $chapters[$chapterIndex] ?? null;
+
+        return $chapter !== null && $startMs >= $chapter['startMs'] && $startMs < $chapter['endMs']
+            ? $chapter
+            : null;
     }
 
     /** @param list<array{startMs: int, endMs: int, text: string}> $buffer */
