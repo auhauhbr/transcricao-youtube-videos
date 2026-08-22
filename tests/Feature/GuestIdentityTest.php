@@ -16,8 +16,8 @@ test('a guest receives a durable secure-by-environment first-party identity cook
         ->and($cookie->getSameSite())->toBe('lax')
         ->and($cookie->getPath())->toBe('/')
         ->and($cookie->isSecure())->toBeFalse()
-        ->and(GuestUsage::query()->sole()->token_hash)->toHaveLength(64)
-        ->and($cookie->getValue())->not->toBe(GuestUsage::query()->sole()->token_hash);
+        ->and($cookie->getValue())->not->toBeEmpty()
+        ->and(GuestUsage::query()->count())->toBe(0);
 
     $response->assertInertia(fn (Assert $page) => $page
         ->missing('guestToken')
@@ -27,17 +27,19 @@ test('a guest receives a durable secure-by-environment first-party identity cook
     );
 });
 
-test('the same valid token reuses one server-side guest identity across sessions', function () {
+test('the same valid token remains stateless until a quota reservation is needed', function () {
     $cookieName = (string) config('transcripts.anonymous.cookie_name');
     $this->withCookie($cookieName, str_repeat('r', 43));
 
-    $this->get('/')->assertOk();
-    $firstId = GuestUsage::query()->sole()->getKey();
+    $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('anonymousQuota', ['limit' => 3, 'used' => 0, 'remaining' => 3])
+    );
     $this->flushSession();
-    $this->get('/')->assertOk();
+    $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('anonymousQuota', ['limit' => 3, 'used' => 0, 'remaining' => 3])
+    );
 
-    expect(GuestUsage::query()->count())->toBe(1)
-        ->and(GuestUsage::query()->sole()->getKey())->toBe($firstId);
+    expect(GuestUsage::query()->count())->toBe(0);
 });
 
 test('a tampered cookie is replaced safely without exposing an error', function () {
@@ -46,6 +48,14 @@ test('a tampered cookie is replaced safely without exposing an error', function 
     $response = $this->withUnencryptedCookie($cookieName, 'tampered-cookie')->get('/');
 
     $response->assertOk()->assertCookie($cookieName);
-    expect(GuestUsage::query()->count())->toBe(1)
-        ->and(GuestUsage::query()->sole()->used_slots)->toBe(0);
+    expect(GuestUsage::query()->count())->toBe(0);
+});
+
+test('public authentication pages do not persist an unused quota ledger', function () {
+    $this->get('/')->assertOk();
+    $this->get('/login')->assertOk();
+    $this->get('/register')->assertOk();
+    $this->get('/library')->assertRedirect(route('login'));
+
+    expect(GuestUsage::query()->count())->toBe(0);
 });

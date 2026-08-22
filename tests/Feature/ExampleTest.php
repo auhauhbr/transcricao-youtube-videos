@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\GuestUsage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -24,6 +25,7 @@ test('the public home renders the landing page', function () {
         );
 
     expect(public_path('favicon.png'))->toBeFile();
+    expect(GuestUsage::query()->count())->toBe(0);
 });
 
 test('the home route is read only', function () {

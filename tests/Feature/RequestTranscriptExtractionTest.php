@@ -4,7 +4,6 @@ use App\Actions\RequestTranscriptExtraction;
 use App\Enums\ExtractionStatus;
 use App\Enums\VideoProvider;
 use App\Jobs\ExtractTranscriptJob;
-use App\Models\GuestUsage;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Queue;
@@ -16,18 +15,16 @@ beforeEach(function () {
     Queue::fake();
 });
 
-function guestUsageForRequestAction(): GuestUsage
+function guestTokenHashForRequestAction(): string
 {
-    return GuestUsage::query()->create([
-        'token_hash' => hash('sha256', 'request-action-guest'),
-    ]);
+    return hash('sha256', 'request-action-guest');
 }
 
 test('requesting extraction creates pending records and dispatches after commit', function () {
     $extraction = app(RequestTranscriptExtraction::class)->handle(
         VideoProvider::YouTube,
         'dQw4w9WgXcQ',
-        guestUsage: guestUsageForRequestAction(),
+        guestTokenHash: guestTokenHashForRequestAction(),
     );
 
     expect($extraction->status)->toBe(ExtractionStatus::Pending)
@@ -45,9 +42,9 @@ test('requesting extraction reuses the canonical video without creating a transc
         'provider_video_id' => 'dQw4w9WgXcQ',
     ]);
 
-    $guestUsage = guestUsageForRequestAction();
-    $first = app(RequestTranscriptExtraction::class)->handle(VideoProvider::YouTube, 'dQw4w9WgXcQ', guestUsage: $guestUsage);
-    $second = app(RequestTranscriptExtraction::class)->handle(VideoProvider::YouTube, 'dQw4w9WgXcQ', 'pt-BR', guestUsage: $guestUsage);
+    $guestTokenHash = guestTokenHashForRequestAction();
+    $first = app(RequestTranscriptExtraction::class)->handle(VideoProvider::YouTube, 'dQw4w9WgXcQ', guestTokenHash: $guestTokenHash);
+    $second = app(RequestTranscriptExtraction::class)->handle(VideoProvider::YouTube, 'dQw4w9WgXcQ', 'pt-BR', guestTokenHash: $guestTokenHash);
 
     expect(Video::query()->count())->toBe(1)
         ->and($first->video_id)->toBe($video->getKey())

@@ -48,11 +48,13 @@ test('a guest receives exactly three reservations and the fourth valid request c
     $this->get('/')->assertInertia(fn (Assert $page) => $page
         ->where('anonymousQuota', ['limit' => 3, 'used' => 0, 'remaining' => 3])
     );
+    expect(GuestUsage::query()->count())->toBe(0);
 
     foreach (array_slice(youtubeQuotaUrls(), 0, 3) as $index => $url) {
         $this->post(route('transcripts.extract'), ['video_url' => $url])->assertRedirect();
 
-        expect(GuestUsage::query()->sole()->used_slots)->toBe($index + 1);
+        expect(GuestUsage::query()->count())->toBe(1)
+            ->and(GuestUsage::query()->sole()->used_slots)->toBe($index + 1);
     }
 
     $this->get('/')->assertInertia(fn (Assert $page) => $page
@@ -81,7 +83,7 @@ test('invalid URLs consume no anonymous slot and dispatch no work', function () 
         'video_url' => 'https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ',
     ])->assertSessionHasErrors('video_url');
 
-    expect(GuestUsage::query()->sole()->used_slots)->toBe(0)
+    expect(GuestUsage::query()->count())->toBe(0)
         ->and(Extraction::query()->count())->toBe(0)
         ->and(Video::query()->count())->toBe(0);
     Queue::assertNothingPushed();

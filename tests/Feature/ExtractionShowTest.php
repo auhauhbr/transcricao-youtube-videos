@@ -127,6 +127,7 @@ test('a ready extraction exposes only ordered public transcript data', function 
             ->where('transcript.languageCode', 'pt-BR')
             ->where('transcript.languageName', 'Português')
             ->where('transcript.source', 'manual')
+            ->where('transcript.sourceLabel', 'Legendas manuais')
             ->where('transcript.wordCount', 3)
             ->where('transcript.characterCount', 20)
             ->where('transcript.blocks.0.position', 0)

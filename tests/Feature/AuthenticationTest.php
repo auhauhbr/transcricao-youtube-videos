@@ -8,6 +8,7 @@ use App\Models\Extraction;
 use App\Models\GuestUsage;
 use App\Models\Transcript;
 use App\Models\User;
+use App\Models\UserTranscript;
 use App\Models\Video;
 use App\Transcript\Providers\FakeTranscriptProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -72,6 +73,7 @@ test('registration validates creates hashes authenticates and adopts the current
         ->and(Extraction::query()->count())->toBe(1)
         ->and(Video::query()->count())->toBe(1)
         ->and(Transcript::query()->count())->toBe(1);
+    expect(UserTranscript::query()->where('user_id', $user->getKey())->count())->toBe(1);
     Queue::assertPushed(ExtractTranscriptJob::class, 1);
 });
 
@@ -87,6 +89,21 @@ test('registration rejects invalid data without authenticating', function () {
 
     $this->assertGuest();
     expect(User::query()->count())->toBe(0);
+});
+
+test('registration without previous guest usage does not create an empty quota ledger', function () {
+    useAuthGuestBrowser($this, 'n');
+
+    $this->get(route('register'))->assertOk();
+    $this->post(route('register'), [
+        'name' => 'Nova Conta',
+        'email' => 'nova-conta@example.com',
+        'password' => 'password-seguro',
+        'password_confirmation' => 'password-seguro',
+    ])->assertRedirect(route('home'));
+
+    $this->assertAuthenticated();
+    expect(GuestUsage::query()->count())->toBe(0);
 });
 
 test('login regenerates authentication and adopts only extractions from the current guest token', function () {
@@ -112,6 +129,23 @@ test('login regenerates authentication and adopts only extractions from the curr
         ->and($extraction->public_id)->toBe($publicId)
         ->and(Extraction::query()->count())->toBe(1);
     Queue::assertPushed(ExtractTranscriptJob::class, 1);
+});
+
+test('login without previous guest usage performs a no-op claim without creating a ledger', function () {
+    $user = User::factory()->create([
+        'email' => 'sem-uso@example.com',
+        'password' => 'password-seguro',
+    ]);
+    useAuthGuestBrowser($this, 'u');
+
+    $this->get(route('login'))->assertOk();
+    $this->post(route('login'), [
+        'email' => 'sem-uso@example.com',
+        'password' => 'password-seguro',
+    ])->assertRedirect(route('home'));
+
+    $this->assertAuthenticatedAs($user);
+    expect(GuestUsage::query()->count())->toBe(0);
 });
 
 test('an ULID or a different guest token cannot claim another browser extraction', function () {
@@ -200,6 +234,17 @@ test('logout is POST only invalidates authentication and preserves the guest quo
         ->where('anonymousQuota', ['limit' => 3, 'used' => 1, 'remaining' => 2])
     );
     $this->get('/logout')->assertMethodNotAllowed();
+});
+
+test('logout from a browser without guest usage does not create a quota ledger', function () {
+    $user = User::factory()->create();
+    useAuthGuestBrowser($this, 'z');
+
+    $this->actingAs($user)->post(route('logout'))->assertRedirect(route('home'));
+    $this->get('/')->assertOk();
+
+    $this->assertGuest();
+    expect(GuestUsage::query()->count())->toBe(0);
 });
 
 test('authenticated shared props omit anonymous quota and expose only public user fields', function () {
