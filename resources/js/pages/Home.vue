@@ -1,9 +1,10 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
 import { nextTick, ref } from 'vue';
+import AnonymousQuotaDialog from '../components/AnonymousQuotaDialog.vue';
 import PublicLayout from '../layouts/PublicLayout.vue';
 
-const { appName, extractUrl } = defineProps({
+const { appName, extractUrl, anonymousQuota } = defineProps({
     appName: {
         type: String,
         required: true,
@@ -12,10 +13,16 @@ const { appName, extractUrl } = defineProps({
         type: String,
         required: true,
     },
+    anonymousQuota: {
+        type: Object,
+        default: null,
+    },
 });
 
 const benefits = ['Timestamps', 'Capítulos', 'TXT / Markdown', 'Organização'];
 const videoUrlInput = ref(null);
+const submitButton = ref(null);
+const quotaDialog = ref(null);
 const form = useForm({
     video_url: '',
 });
@@ -27,8 +34,35 @@ const submit = () => {
 
     form.post(extractUrl, {
         preserveScroll: true,
-        onError: () => nextTick(() => videoUrlInput.value?.focus()),
+        onError: (errors) => {
+            if (errors.anonymous_quota) {
+                quotaDialog.value?.open(submitButton.value);
+                return;
+            }
+
+            nextTick(() => videoUrlInput.value?.focus());
+        },
     });
+};
+
+const quotaMessage = () => {
+    if (!anonymousQuota) {
+        return '';
+    }
+
+    if (anonymousQuota.remaining === anonymousQuota.limit) {
+        return `${anonymousQuota.limit} transcrições gratuitas sem cadastro.`;
+    }
+
+    if (anonymousQuota.remaining === 1) {
+        return '1 transcrição gratuita restante.';
+    }
+
+    if (anonymousQuota.remaining === 0) {
+        return 'Limite gratuito utilizado. Entre ou crie uma conta para continuar.';
+    }
+
+    return `${anonymousQuota.remaining} transcrições gratuitas restantes.`;
 };
 </script>
 
@@ -69,6 +103,7 @@ const submit = () => {
                             :disabled="form.processing"
                         />
                         <button
+                            ref="submitButton"
                             type="submit"
                             class="h-14 shrink-0 bg-accent px-8 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
                             :disabled="form.processing"
@@ -79,7 +114,14 @@ const submit = () => {
                     <p v-if="form.errors.video_url" id="video-url-error" class="mt-3 text-sm font-medium text-destructive">
                         {{ form.errors.video_url }}
                     </p>
+                    <p v-if="anonymousQuota" class="mt-3 text-sm text-muted-foreground">{{ quotaMessage() }}</p>
                 </form>
+
+                <AnonymousQuotaDialog
+                    ref="quotaDialog"
+                    :message="form.errors.anonymous_quota || 'Você utilizou suas 3 transcrições gratuitas. Entre ou crie uma conta para continuar.'"
+                    @close="form.clearErrors('anonymous_quota')"
+                />
 
                 <ul class="mt-7 flex max-w-5xl flex-wrap gap-x-7 gap-y-3" aria-label="Benefícios planejados">
                     <li v-for="benefit in benefits" :key="benefit" class="flex items-center gap-2 text-sm text-muted-foreground">

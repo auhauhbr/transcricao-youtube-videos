@@ -1,0 +1,94 @@
+<script setup>
+import { Head, useForm } from '@inertiajs/vue3';
+import PublicLayout from '../../layouts/PublicLayout.vue';
+
+const props = defineProps({
+    appName: { type: String, required: true },
+    auth: { type: Object, required: true },
+    flash: { type: Object, required: true },
+    profileUrl: { type: String, required: true },
+    passwordUrl: { type: String, required: true },
+});
+
+const profileForm = useForm({
+    name: props.auth.user.name,
+    email: props.auth.user.email,
+});
+const passwordForm = useForm({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+});
+
+const updateProfile = () => profileForm.patch(props.profileUrl, { preserveScroll: true });
+const updatePassword = () =>
+    passwordForm.put(props.passwordUrl, {
+        preserveScroll: true,
+        onSuccess: () => passwordForm.reset(),
+        onFinish: () => passwordForm.reset('current_password', 'password', 'password_confirmation'),
+    });
+</script>
+
+<template>
+    <Head title="Minha conta">
+        <meta name="robots" content="noindex, nofollow" />
+    </Head>
+
+    <PublicLayout :app-name="appName">
+        <section class="flex-1 border-b border-border bg-background">
+            <div class="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+                <a href="/" class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">← Voltar</a>
+                <p class="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Configurações</p>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Minha conta</h1>
+
+                <p v-if="flash.status" class="mt-6 border border-border bg-card px-4 py-3 text-sm text-muted-foreground" aria-live="polite">
+                    {{ flash.status === 'profile-updated' ? 'Dados da conta atualizados.' : 'Senha atualizada com segurança.' }}
+                </p>
+
+                <div class="mt-8 grid gap-6 md:grid-cols-2">
+                    <section class="border border-border bg-card p-6" aria-labelledby="profile-title">
+                        <h2 id="profile-title" class="text-xl font-semibold text-foreground">Dados pessoais</h2>
+                        <form class="mt-6 space-y-5" @submit.prevent="updateProfile">
+                            <div>
+                                <label for="account-name" class="text-sm font-semibold text-foreground">Nome</label>
+                                <input id="account-name" v-model="profileForm.name" type="text" autocomplete="name" :aria-invalid="profileForm.errors.name ? 'true' : 'false'" :aria-describedby="profileForm.errors.name ? 'account-name-error' : undefined" class="mt-2 h-12 w-full border border-border bg-background px-4 outline-none focus:border-accent" />
+                                <p v-if="profileForm.errors.name" id="account-name-error" class="mt-2 text-sm text-destructive">{{ profileForm.errors.name }}</p>
+                            </div>
+                            <div>
+                                <label for="account-email" class="text-sm font-semibold text-foreground">Email</label>
+                                <input id="account-email" v-model="profileForm.email" type="email" autocomplete="email" :aria-invalid="profileForm.errors.email ? 'true' : 'false'" :aria-describedby="profileForm.errors.email ? 'account-email-error' : undefined" class="mt-2 h-12 w-full border border-border bg-background px-4 outline-none focus:border-accent" />
+                                <p v-if="profileForm.errors.email" id="account-email-error" class="mt-2 text-sm text-destructive">{{ profileForm.errors.email }}</p>
+                            </div>
+                            <button type="submit" class="h-11 bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-70" :disabled="profileForm.processing">
+                                Salvar dados
+                            </button>
+                        </form>
+                    </section>
+
+                    <section class="border border-border bg-card p-6" aria-labelledby="password-title">
+                        <h2 id="password-title" class="text-xl font-semibold text-foreground">Alterar senha</h2>
+                        <form class="mt-6 space-y-5" @submit.prevent="updatePassword">
+                            <div>
+                                <label for="current-password" class="text-sm font-semibold text-foreground">Senha atual</label>
+                                <input id="current-password" v-model="passwordForm.current_password" type="password" autocomplete="current-password" :aria-invalid="passwordForm.errors.current_password ? 'true' : 'false'" :aria-describedby="passwordForm.errors.current_password ? 'current-password-error' : undefined" class="mt-2 h-12 w-full border border-border bg-background px-4 outline-none focus:border-accent" />
+                                <p v-if="passwordForm.errors.current_password" id="current-password-error" class="mt-2 text-sm text-destructive">{{ passwordForm.errors.current_password }}</p>
+                            </div>
+                            <div>
+                                <label for="new-password" class="text-sm font-semibold text-foreground">Nova senha</label>
+                                <input id="new-password" v-model="passwordForm.password" type="password" autocomplete="new-password" :aria-invalid="passwordForm.errors.password ? 'true' : 'false'" :aria-describedby="passwordForm.errors.password ? 'new-password-error' : undefined" class="mt-2 h-12 w-full border border-border bg-background px-4 outline-none focus:border-accent" />
+                                <p v-if="passwordForm.errors.password" id="new-password-error" class="mt-2 text-sm text-destructive">{{ passwordForm.errors.password }}</p>
+                            </div>
+                            <div>
+                                <label for="new-password-confirmation" class="text-sm font-semibold text-foreground">Confirmar nova senha</label>
+                                <input id="new-password-confirmation" v-model="passwordForm.password_confirmation" type="password" autocomplete="new-password" class="mt-2 h-12 w-full border border-border bg-background px-4 outline-none focus:border-accent" />
+                            </div>
+                            <button type="submit" class="h-11 border border-border bg-background px-5 text-sm font-semibold text-foreground hover:border-accent hover:text-accent disabled:opacity-70" :disabled="passwordForm.processing">
+                                Atualizar senha
+                            </button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </PublicLayout>
+</template>

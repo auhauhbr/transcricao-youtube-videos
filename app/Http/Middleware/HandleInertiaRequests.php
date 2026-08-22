@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Guest\GuestExtractionQuota;
+use App\Models\GuestUsage;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,9 +37,25 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
+            'auth' => [
+                'user' => $user === null ? null : [
+                    'id' => $user->getAuthIdentifier(),
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ],
+            'anonymousQuota' => $user !== null || ! $guestUsage instanceof GuestUsage
+                ? null
+                : app(GuestExtractionQuota::class)->summary($guestUsage),
+            'flash' => [
+                'status' => fn (): ?string => $request->session()->get('status'),
+            ],
         ];
     }
 }
