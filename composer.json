@@ -50,8 +50,8 @@
             "@php artisan dev"
         ],
         "test": [
-            "@php artisan config:clear --ansi @no_additional_args",
-            "@php artisan test"
+            "APP_ENV=testing php artisan config:clear --ansi @no_additional_args",
+            "APP_ENV=testing php artisan test"
         ],
         "analyse": "phpstan analyse --memory-limit=1G",
         "format": "pint",

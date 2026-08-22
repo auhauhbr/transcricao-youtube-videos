@@ -1,15 +1,35 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
+import { nextTick, ref } from 'vue';
 import PublicLayout from '../layouts/PublicLayout.vue';
 
-defineProps({
+const { appName, extractUrl } = defineProps({
     appName: {
+        type: String,
+        required: true,
+    },
+    extractUrl: {
         type: String,
         required: true,
     },
 });
 
 const benefits = ['Timestamps', 'Capítulos', 'TXT / Markdown', 'Organização'];
+const videoUrlInput = ref(null);
+const form = useForm({
+    video_url: '',
+});
+
+const submit = () => {
+    if (form.processing) {
+        return;
+    }
+
+    form.post(extractUrl, {
+        preserveScroll: true,
+        onError: () => nextTick(() => videoUrlInput.value?.focus()),
+    });
+};
 </script>
 
 <template>
@@ -31,28 +51,34 @@ const benefits = ['Timestamps', 'Capítulos', 'TXT / Markdown', 'Organização']
                     </p>
                 </div>
 
-                <!-- Visual-only form for Phase 1. No request or extraction endpoint is dispatched. -->
-                <form class="mt-12 max-w-5xl" aria-describedby="extract-status" @submit.prevent>
+                <form class="mt-12 max-w-5xl" :aria-busy="form.processing" @submit.prevent="submit">
                     <label for="video-url" class="mb-3 block text-sm font-semibold text-foreground">URL do vídeo</label>
                     <div class="flex flex-col gap-3 sm:flex-row">
                         <input
                             id="video-url"
+                            ref="videoUrlInput"
+                            v-model="form.video_url"
                             name="video_url"
                             type="url"
                             inputmode="url"
                             autocomplete="url"
                             placeholder="https://youtube.com/watch?v=..."
-                            class="h-14 min-w-0 flex-1 border border-border bg-card px-4 text-base text-foreground placeholder:text-muted-foreground/70 focus:border-accent focus:outline-none sm:h-16 sm:px-5"
+                            :aria-invalid="form.errors.video_url ? 'true' : 'false'"
+                            :aria-describedby="form.errors.video_url ? 'video-url-error' : undefined"
+                            class="h-14 min-w-0 flex-1 border border-border bg-card px-4 text-base text-foreground placeholder:text-muted-foreground/70 focus:border-accent focus:outline-none disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-5"
+                            :disabled="form.processing"
                         />
                         <button
                             type="submit"
-                            class="h-14 shrink-0 bg-accent px-8 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover sm:h-16 sm:px-10"
-                            aria-describedby="extract-status"
+                            class="h-14 shrink-0 bg-accent px-8 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
+                            :disabled="form.processing"
                         >
-                            Extrair
+                            {{ form.processing ? 'Processando...' : 'Extrair' }}
                         </button>
                     </div>
-                    <p id="extract-status" class="sr-only">A interface de extração é apenas visual nesta fase.</p>
+                    <p v-if="form.errors.video_url" id="video-url-error" class="mt-3 text-sm font-medium text-destructive">
+                        {{ form.errors.video_url }}
+                    </p>
                 </form>
 
                 <ul class="mt-7 flex max-w-5xl flex-wrap gap-x-7 gap-y-3" aria-label="Benefícios planejados">

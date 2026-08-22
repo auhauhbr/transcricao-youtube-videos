@@ -3,6 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
+test('the test suite boots the application in the testing environment', function () {
+    expect(app()->environment())->toBe('testing');
+});
+
 test('the public home renders the landing page', function () {
     $this->withoutVite();
 
@@ -13,6 +17,7 @@ test('the public home renders the landing page', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Home')
             ->where('appName', config('app.name'))
+            ->where('extractUrl', route('transcripts.extract', absolute: false))
         );
 
     expect(public_path('favicon.png'))->toBeFile();
@@ -24,8 +29,4 @@ test('the home route is read only', function () {
         ->not->toContain('POST');
 
     $this->post('/')->assertMethodNotAllowed();
-});
-
-test('no transcript extraction endpoint exists', function () {
-    $this->post('/transcripts/extract')->assertNotFound();
 });
