@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\RequestTranscriptExtraction;
+use App\Enums\VideoProvider;
 use App\Http\Requests\ExtractTranscriptRequest;
 use App\Support\YouTube\InvalidYouTubeUrlException;
 use App\Support\YouTube\YouTubeUrlParser;
-use App\Transcript\Contracts\TranscriptProvider;
-use App\Transcript\Exceptions\TranscriptProviderException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ExtractTranscriptController extends Controller
 {
     public function __invoke(
         ExtractTranscriptRequest $request,
         YouTubeUrlParser $urlParser,
-        TranscriptProvider $transcriptProvider,
-    ): Response {
+        RequestTranscriptExtraction $requestExtraction,
+    ): RedirectResponse {
         try {
             $providerVideoId = $urlParser->parse($request->string('video_url')->toString());
         } catch (InvalidYouTubeUrlException) {
@@ -26,17 +25,11 @@ class ExtractTranscriptController extends Controller
             ]);
         }
 
-        try {
-            $transcript = $transcriptProvider->fetch($providerVideoId);
-        } catch (TranscriptProviderException) {
-            throw ValidationException::withMessages([
-                'video_url' => 'Não foi possível obter a transcrição deste vídeo.',
-            ]);
-        }
+        $extraction = $requestExtraction->handle(
+            VideoProvider::YouTube,
+            $providerVideoId,
+        );
 
-        return Inertia::render('Transcripts/Show', [
-            'transcript' => $transcript->toArray(),
-            'youtubeUrl' => "https://www.youtube.com/watch?v={$providerVideoId}",
-        ]);
+        return to_route('extractions.show', $extraction);
     }
 }

@@ -10,6 +10,9 @@ use App\Transcript\YtDlp\YtDlpErrorClassifier;
 use App\Transcript\YtDlp\YtDlpGateway;
 use App\Transcript\YtDlp\YtDlpProcessRunner;
 use App\Transcript\YtDlp\YtDlpProcessRunnerContract;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 
@@ -55,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('transcript-extractions', fn (Request $request): array => [
+            Limit::perMinute(5)->by('minute:'.$request->ip()),
+            Limit::perHour(20)->by('hour:'.$request->ip()),
+        ]);
     }
 }

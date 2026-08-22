@@ -7,6 +7,7 @@ use App\Enums\ExtractionStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use LogicException;
 
@@ -14,6 +15,9 @@ use LogicException;
  * @property ExtractionStatus $status
  * @property ExtractionErrorCode|null $error_code
  * @property int|null $transcript_id
+ * @property string $public_id
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
  * @property-read Video $video
  */
 #[Fillable([
@@ -39,6 +43,11 @@ class Extraction extends Model
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
     }
 
     /** @return BelongsTo<User, $this> */

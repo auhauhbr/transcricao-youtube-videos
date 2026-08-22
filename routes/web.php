@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExtractionController;
 use App\Http\Controllers\ExtractTranscriptController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,4 +12,9 @@ Route::get('/', function () {
 });
 
 Route::post('/transcripts/extract', ExtractTranscriptController::class)
+    ->middleware('throttle:transcript-extractions')
     ->name('transcripts.extract');
+
+Route::get('/extractions/{extraction}', ExtractionController::class)
+    ->whereUlid('extraction')
+    ->name('extractions.show');
