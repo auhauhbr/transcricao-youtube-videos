@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Transcript\Contracts\TranscriptProvider;
 use App\Transcript\Providers\FakeTranscriptProvider;
+use App\Transcript\Providers\YouTubeTranscriptProvider;
 use App\Transcript\YtDlp\Json3TranscriptParser;
 use App\Transcript\YtDlp\YtDlpErrorClassifier;
 use App\Transcript\YtDlp\YtDlpGateway;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TranscriptProvider::class, function (): TranscriptProvider {
             return match (config('transcripts.provider')) {
                 'fake' => new FakeTranscriptProvider,
+                'yt_dlp' => $this->app->make(YouTubeTranscriptProvider::class),
                 default => throw new LogicException('A transcript provider is not configured for this environment.'),
             };
         });

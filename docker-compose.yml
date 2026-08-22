@@ -5,6 +5,8 @@ services:
             dockerfile: docker/php/Dockerfile
             target: app
         env_file: .env
+        environment:
+            TRANSCRIPT_PROVIDER: fake
         volumes:
             - ./.env:/var/www/html/.env:ro
             - ./app:/var/www/html/app
@@ -41,8 +43,11 @@ services:
             dockerfile: docker/php/Dockerfile
             target: worker
         user: www-data
-        command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+        command: php artisan queue:work redis --queue=transcripts,default --sleep=3 --tries=3 --timeout=180
         env_file: .env
+        environment:
+            LOG_CHANNEL: stderr
+            TRANSCRIPT_PROVIDER: yt_dlp
         volumes:
             - ./.env:/var/www/html/.env:ro
             - ./app:/var/www/html/app
