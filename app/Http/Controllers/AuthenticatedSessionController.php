@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Actions\ClaimGuestExtractions;
+use App\Http\Middleware\EnsureGuestIdentity;
+use App\Http\Requests\LoginRequest;
+use App\Models\GuestUsage;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AuthenticatedSessionController extends Controller
+{
+    public function create(): Response
+    {
+        return Inertia::render('Auth/Login', [
+            'loginUrl' => route('login', absolute: false),
+            'registerUrl' => route('register', absolute: false),
+        ]);
+    }
+
+    public function store(LoginRequest $request, ClaimGuestExtractions $claimExtractions): RedirectResponse
+    {
+        $credentials = $request->safe()->only(['email', 'password']);
+
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => 'As credenciais informadas são inválidas.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+        $user = $request->user();
+        $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+
+        if ($user !== null) {
+            $claimExtractions->handle($user, $guestUsage instanceof GuestUsage ? $guestUsage : null);
+        }
+
+        return redirect()->intended(route('home'));
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home');
+    }
+}

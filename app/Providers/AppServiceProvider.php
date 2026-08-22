@@ -14,6 +14,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use LogicException;
 
 class AppServiceProvider extends ServiceProvider
@@ -62,5 +63,13 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by('minute:'.$request->ip()),
             Limit::perHour(20)->by('hour:'.$request->ip()),
         ]);
+
+        RateLimiter::for('login', function (Request $request): Limit {
+            $email = Str::lower(trim((string) $request->input('email')));
+
+            return Limit::perMinute(5)->by(hash('sha256', $email.'|'.$request->ip()));
+        });
+
+        RateLimiter::for('register', fn (Request $request): Limit => Limit::perHour(5)->by((string) $request->ip()));
     }
 }
