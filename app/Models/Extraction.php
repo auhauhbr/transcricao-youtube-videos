@@ -15,9 +15,11 @@ use LogicException;
  * @property ExtractionStatus $status
  * @property ExtractionErrorCode|null $error_code
  * @property int|null $transcript_id
+ * @property int|null $guest_usage_id
  * @property string $public_id
  * @property Carbon|null $started_at
  * @property Carbon|null $completed_at
+ * @property Carbon|null $guest_slot_released_at
  * @property-read Video $video
  */
 #[Fillable([
@@ -42,6 +44,7 @@ class Extraction extends Model
             'error_code' => ExtractionErrorCode::class,
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'guest_slot_released_at' => 'datetime',
         ];
     }
 
@@ -54,6 +57,12 @@ class Extraction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<GuestUsage, $this> */
+    public function guestUsage(): BelongsTo
+    {
+        return $this->belongsTo(GuestUsage::class);
     }
 
     /** @return BelongsTo<Video, $this> */

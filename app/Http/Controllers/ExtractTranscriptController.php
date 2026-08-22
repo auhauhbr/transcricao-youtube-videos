@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Actions\RequestTranscriptExtraction;
 use App\Enums\VideoProvider;
+use App\Exceptions\AnonymousQuotaExceededException;
+use App\Http\Middleware\EnsureGuestIdentity;
 use App\Http\Requests\ExtractTranscriptRequest;
+use App\Models\GuestUsage;
 use App\Support\YouTube\InvalidYouTubeUrlException;
 use App\Support\YouTube\YouTubeUrlParser;
 use Illuminate\Http\RedirectResponse;
@@ -25,10 +28,20 @@ class ExtractTranscriptController extends Controller
             ]);
         }
 
-        $extraction = $requestExtraction->handle(
-            VideoProvider::YouTube,
-            $providerVideoId,
-        );
+        try {
+            $user = $request->user();
+            $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+            $extraction = $requestExtraction->handle(
+                provider: VideoProvider::YouTube,
+                providerVideoId: $providerVideoId,
+                user: $user,
+                guestUsage: $user === null && $guestUsage instanceof GuestUsage ? $guestUsage : null,
+            );
+        } catch (AnonymousQuotaExceededException) {
+            throw ValidationException::withMessages([
+                'anonymous_quota' => 'Você utilizou suas 3 transcrições gratuitas. Entre ou crie uma conta para continuar.',
+            ]);
+        }
 
         return to_route('extractions.show', $extraction);
     }

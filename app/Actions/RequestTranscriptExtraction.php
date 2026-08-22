@@ -3,8 +3,10 @@
 namespace App\Actions;
 
 use App\Enums\VideoProvider;
+use App\Guest\GuestExtractionQuota;
 use App\Jobs\ExtractTranscriptJob;
 use App\Models\Extraction;
+use App\Models\GuestUsage;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Support\Facades\DB;
@@ -12,32 +14,67 @@ use InvalidArgumentException;
 
 final class RequestTranscriptExtraction
 {
+    public function __construct(private readonly GuestExtractionQuota $guestQuota) {}
+
     public function handle(
         VideoProvider $provider,
         string $providerVideoId,
         ?string $requestedLanguage = null,
         ?User $user = null,
+        ?GuestUsage $guestUsage = null,
     ): Extraction {
         $this->validateIdentity($provider, $providerVideoId);
         $requestedLanguage = $this->normalizeLanguage($requestedLanguage);
 
-        return DB::transaction(function () use ($provider, $providerVideoId, $requestedLanguage, $user): Extraction {
-            $video = Video::query()->firstOrCreate([
-                'provider' => $provider,
-                'provider_video_id' => $providerVideoId,
-            ]);
+        if (($user === null) === ($guestUsage === null)) {
+            throw new InvalidArgumentException('Exactly one extraction owner context must be provided.');
+        }
 
-            $extraction = new Extraction([
-                'requested_language' => $requestedLanguage,
-            ]);
-            $extraction->video()->associate($video);
-            $extraction->user()->associate($user);
-            $extraction->save();
+        if ($user !== null) {
+            return DB::transaction(fn (): Extraction => $this->createExtraction(
+                $provider,
+                $providerVideoId,
+                $requestedLanguage,
+                $user,
+                null,
+            ));
+        }
 
-            ExtractTranscriptJob::dispatch($extraction->getKey())->afterCommit();
+        return $this->guestQuota->reserve(
+            $guestUsage,
+            fn (GuestUsage $lockedUsage): Extraction => $this->createExtraction(
+                $provider,
+                $providerVideoId,
+                $requestedLanguage,
+                null,
+                $lockedUsage,
+            ),
+        );
+    }
 
-            return $extraction;
-        });
+    private function createExtraction(
+        VideoProvider $provider,
+        string $providerVideoId,
+        ?string $requestedLanguage,
+        ?User $user,
+        ?GuestUsage $guestUsage,
+    ): Extraction {
+        $video = Video::query()->firstOrCreate([
+            'provider' => $provider,
+            'provider_video_id' => $providerVideoId,
+        ]);
+
+        $extraction = new Extraction([
+            'requested_language' => $requestedLanguage,
+        ]);
+        $extraction->video()->associate($video);
+        $extraction->user()->associate($user);
+        $extraction->guestUsage()->associate($guestUsage);
+        $extraction->save();
+
+        ExtractTranscriptJob::dispatch($extraction->getKey())->afterCommit();
+
+        return $extraction;
     }
 
     private function validateIdentity(VideoProvider $provider, string $providerVideoId): void

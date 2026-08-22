@@ -6,6 +6,13 @@ $localProvider = in_array($environment, ['local', 'testing'], true) ? 'fake' : n
 return [
     'provider' => env('TRANSCRIPT_PROVIDER', $localProvider),
 
+    'anonymous' => [
+        'limit' => (int) env('ANONYMOUS_TRANSCRIPT_LIMIT', 3),
+        'cookie_name' => env('ANONYMOUS_TRANSCRIPT_COOKIE', 'transcript_guest'),
+        'cookie_lifetime_minutes' => (int) env('ANONYMOUS_TRANSCRIPT_COOKIE_LIFETIME', 525_600),
+        'cookie_secure' => env('ANONYMOUS_TRANSCRIPT_COOKIE_SECURE', $environment === 'production'),
+    ],
+
     'yt_dlp' => [
         'binary' => env('YT_DLP_BINARY', '/usr/local/bin/yt-dlp'),
         'js_runtime' => env('YT_DLP_JS_RUNTIME', 'node'),

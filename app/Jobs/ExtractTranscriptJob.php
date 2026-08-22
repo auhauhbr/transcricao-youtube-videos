@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\FailTranscriptExtraction;
 use App\Actions\PersistTranscriptData;
 use App\Enums\ExtractionErrorCode;
 use App\Enums\ExtractionStatus;
@@ -47,8 +48,11 @@ final class ExtractTranscriptJob implements ShouldBeUnique, ShouldQueue
         return [60, 300];
     }
 
-    public function handle(TranscriptProvider $provider, PersistTranscriptData $persister): void
-    {
+    public function handle(
+        TranscriptProvider $provider,
+        PersistTranscriptData $persister,
+        FailTranscriptExtraction $failExtraction,
+    ): void {
         $extraction = Extraction::query()->with('video')->find($this->extractionId);
 
         if ($extraction === null || in_array($extraction->status, [ExtractionStatus::Ready, ExtractionStatus::Failed], true)) {
@@ -68,13 +72,13 @@ final class ExtractTranscriptJob implements ShouldBeUnique, ShouldQueue
 
             Log::info('Transcript extraction completed.', $this->logContext($extraction, microtime(true) - $startedAt));
         } catch (TranscriptNotAvailableException $exception) {
-            $this->markTerminalFailure($extraction, ExtractionErrorCode::TranscriptNotAvailable, 'A transcrição não está disponível para este vídeo.', $exception);
+            $this->markTerminalFailure($extraction, ExtractionErrorCode::TranscriptNotAvailable, 'A transcrição não está disponível para este vídeo.', $exception, $failExtraction);
         } catch (VideoUnavailableException $exception) {
-            $this->markTerminalFailure($extraction, ExtractionErrorCode::VideoUnavailable, 'O vídeo solicitado não está disponível.', $exception);
+            $this->markTerminalFailure($extraction, ExtractionErrorCode::VideoUnavailable, 'O vídeo solicitado não está disponível.', $exception, $failExtraction);
         } catch (TranscriptProviderBlockedException $exception) {
-            $this->markTerminalFailure($extraction, ExtractionErrorCode::ProviderBlocked, 'O provedor bloqueou temporariamente a solicitação.', $exception);
+            $this->markTerminalFailure($extraction, ExtractionErrorCode::ProviderBlocked, 'O provedor bloqueou temporariamente a solicitação.', $exception, $failExtraction);
         } catch (TranscriptOutputLimitException $exception) {
-            $this->markTerminalFailure($extraction, ExtractionErrorCode::OutputLimit, 'A resposta do provedor excedeu o limite permitido.', $exception);
+            $this->markTerminalFailure($extraction, ExtractionErrorCode::OutputLimit, 'A resposta do provedor excedeu o limite permitido.', $exception, $failExtraction);
         } catch (TranscriptProviderTimeoutException $exception) {
             throw $exception;
         } catch (TranscriptProviderException $exception) {
@@ -90,10 +94,6 @@ final class ExtractTranscriptJob implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        if ($extraction->status === ExtractionStatus::Pending) {
-            $extraction->markProcessing();
-        }
-
         $code = $exception instanceof TranscriptProviderTimeoutException
             ? ExtractionErrorCode::ProviderTimeout
             : ExtractionErrorCode::ProviderError;
@@ -101,7 +101,7 @@ final class ExtractTranscriptJob implements ShouldBeUnique, ShouldQueue
             ? 'O provedor excedeu o tempo limite da extração.'
             : 'Não foi possível concluir a extração da transcrição.';
 
-        $extraction->markFailed($code, $message);
+        $extraction = app(FailTranscriptExtraction::class)->handle($extraction, $code, $message);
 
         Log::warning('Transcript extraction exhausted its retries.', [
             ...$this->logContext($extraction),
@@ -115,12 +115,9 @@ final class ExtractTranscriptJob implements ShouldBeUnique, ShouldQueue
         ExtractionErrorCode $code,
         string $message,
         Throwable $exception,
+        FailTranscriptExtraction $failExtraction,
     ): void {
-        $extraction->refresh();
-
-        if ($extraction->status === ExtractionStatus::Processing) {
-            $extraction->markFailed($code, $message);
-        }
+        $extraction = $failExtraction->handle($extraction, $code, $message);
 
         Log::notice('Transcript extraction failed terminally.', [
             ...$this->logContext($extraction),
