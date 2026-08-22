@@ -73,7 +73,7 @@ const submit = () => {
                             class="h-14 shrink-0 bg-accent px-8 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
                             :disabled="form.processing"
                         >
-                            {{ form.processing ? 'Processando...' : 'Extrair' }}
+                            {{ form.processing ? 'Enviando...' : 'Extrair' }}
                         </button>
                     </div>
                     <p v-if="form.errors.video_url" id="video-url-error" class="mt-3 text-sm font-medium text-destructive">
