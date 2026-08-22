@@ -34,6 +34,7 @@ function readyExtractionForShow(): Extraction
         'provider_video_id' => 'dQw4w9WgXcQ',
         'title' => 'Vídeo persistido',
         'channel_name' => 'Canal seguro',
+        'channel_id' => 'UC-safe-channel-id',
         'duration_seconds' => 125,
         'thumbnail_url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
         'metadata' => ['private' => 'must not leak'],
@@ -118,6 +119,8 @@ test('a ready extraction exposes only ordered public transcript data', function 
             ->where('video.providerVideoId', 'dQw4w9WgXcQ')
             ->where('video.title', 'Vídeo persistido')
             ->where('video.channelName', 'Canal seguro')
+            ->where('video.channelId', 'UC-safe-channel-id')
+            ->where('video.thumbnailUrl', 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg')
             ->where('video.durationSeconds', 125)
             ->where('video.youtubeUrl', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
             ->where('transcript.languageCode', 'pt-BR')
@@ -135,6 +138,7 @@ test('a ready extraction exposes only ordered public transcript data', function 
             ->missing('extraction.user_id')
             ->missing('video.id')
             ->missing('video.metadata')
+            ->missing('video.channel_id')
             ->missing('video.thumbnail_url')
             ->missing('transcript.id')
             ->missing('transcript.extracted_at')

@@ -72,7 +72,7 @@ class ExtractionController extends Controller
         ];
     }
 
-    /** @return array{providerVideoId: string, title: string, channelName: string, durationSeconds: int, youtubeUrl: string} */
+    /** @return array{providerVideoId: string, title: string, channelName: string, channelId: string|null, thumbnailUrl: string|null, durationSeconds: int, youtubeUrl: string} */
     private function readyVideoData(Extraction $extraction): array
     {
         $video = $extraction->video;
@@ -81,6 +81,8 @@ class ExtractionController extends Controller
             'providerVideoId' => $video->provider_video_id,
             'title' => $video->title ?? 'Transcrição do YouTube',
             'channelName' => $video->channel_name ?? 'Canal não informado',
+            'channelId' => $video->channel_id,
+            'thumbnailUrl' => $video->thumbnail_url,
             'durationSeconds' => $video->duration_seconds ?? 0,
             'youtubeUrl' => "https://www.youtube.com/watch?v={$video->provider_video_id}",
         ];

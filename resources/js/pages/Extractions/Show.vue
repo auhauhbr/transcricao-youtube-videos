@@ -129,9 +129,9 @@ onBeforeUnmount(() => {
     <PublicLayout :app-name="appName">
         <TranscriptResult v-if="hasReadyResult" :transcript="transcript" :video="video" />
 
-        <section v-else class="border-b border-border bg-background">
-            <div class="mx-auto flex min-h-[60vh] max-w-3xl items-center px-5 py-16 sm:px-8 sm:py-24">
-                <div class="w-full border border-border bg-card p-7 sm:p-10">
+        <section v-else class="flex flex-1 items-center border-b border-border bg-background">
+            <div class="mx-auto flex w-full max-w-3xl items-center px-5 py-16 sm:px-8 sm:py-20">
+                <div class="w-full border border-border bg-card p-7 shadow-[0_18px_60px_rgba(0,0,0,0.05)] sm:p-10 dark:shadow-none">
                     <template v-if="extraction.status === 'pending'">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Na fila</p>
                         <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Preparando sua transcrição</h1>
