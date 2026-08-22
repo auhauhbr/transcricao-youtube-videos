@@ -2,6 +2,8 @@
 
 namespace App\Transcript\Data;
 
+use App\Enums\TranscriptSource;
+
 final readonly class TranscriptData
 {
     /**
@@ -12,6 +14,7 @@ final readonly class TranscriptData
         public VideoMetadataData $video,
         public string $languageCode,
         public string $languageName,
+        public TranscriptSource $source,
         public array $segments,
         public array $chapters,
     ) {}
@@ -25,6 +28,7 @@ final readonly class TranscriptData
             'video' => $this->video->toArray(),
             'languageCode' => $this->languageCode,
             'languageName' => $this->languageName,
+            'source' => $this->source->value,
             'segments' => array_map(
                 fn (TranscriptSegmentData $segment): array => $segment->toArray(),
                 $this->segments,

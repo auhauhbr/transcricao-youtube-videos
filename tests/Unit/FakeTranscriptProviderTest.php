@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TranscriptSource;
 use App\Enums\VideoProvider;
 use App\Transcript\Data\TranscriptData;
 use App\Transcript\Providers\FakeTranscriptProvider;
@@ -13,6 +14,7 @@ test('the fake provider returns deterministic structured transcript data', funct
         ->toBeInstanceOf(TranscriptData::class)
         ->and($firstResult->toArray())->toBe($secondResult->toArray())
         ->and($firstResult->video->provider)->toBe(VideoProvider::YouTube)
+        ->and($firstResult->source)->toBe(TranscriptSource::Manual)
         ->and($firstResult->video->providerVideoId)->toBe('dQw4w9WgXcQ')
         ->and($firstResult->segments)->toHaveCount(6)
         ->and($firstResult->chapters)->toHaveCount(3);

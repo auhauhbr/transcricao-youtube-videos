@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TranscriptSource;
 use App\Transcript\Data\TranscriptData;
 use App\Transcript\Providers\YouTubeTranscriptProvider;
 use App\Transcript\YtDlp\CaptionTrackSelector;
@@ -41,6 +42,7 @@ test('the real provider coordinates yt-dlp data into the existing DTO contract o
         expect($transcript)->toBeInstanceOf(TranscriptData::class)
             ->and($transcript->video->providerVideoId)->toBe('dQw4w9WgXcQ')
             ->and($transcript->languageCode)->toBe('pt-BR')
+            ->and($transcript->source)->toBe(TranscriptSource::Manual)
             ->and($transcript->segments)->toHaveCount(3)
             ->and($transcript->chapters)->toHaveCount(3)
             ->and($runner->calls)->toHaveCount(2)

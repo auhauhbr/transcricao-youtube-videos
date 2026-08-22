@@ -2,6 +2,7 @@
 
 namespace App\Transcript\YtDlp;
 
+use App\Enums\TranscriptSource;
 use App\Enums\VideoProvider;
 use App\Transcript\Data\ChapterData;
 use App\Transcript\Data\TranscriptData;
@@ -37,6 +38,10 @@ final class YtDlpTranscriptMapper
             ),
             languageCode: $track->languageCode,
             languageName: $track->languageName,
+            source: match ($track->kind) {
+                CaptionTrackKind::Manual => TranscriptSource::Manual,
+                CaptionTrackKind::Automatic => TranscriptSource::Automatic,
+            },
             segments: $segments,
             chapters: $this->chapters($metadata['chapters'] ?? null, $durationSeconds),
         );

@@ -7,7 +7,12 @@ use Database\Factories\VideoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property VideoProvider $provider
+ * @property string $provider_video_id
+ */
 #[Fillable([
     'provider',
     'provider_video_id',
@@ -37,5 +42,17 @@ class Video extends Model
             'published_at' => 'datetime',
             'metadata' => 'array',
         ];
+    }
+
+    /** @return HasMany<Transcript, $this> */
+    public function transcripts(): HasMany
+    {
+        return $this->hasMany(Transcript::class);
+    }
+
+    /** @return HasMany<Extraction, $this> */
+    public function extractions(): HasMany
+    {
+        return $this->hasMany(Extraction::class);
     }
 }

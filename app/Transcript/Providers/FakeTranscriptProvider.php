@@ -2,6 +2,7 @@
 
 namespace App\Transcript\Providers;
 
+use App\Enums\TranscriptSource;
 use App\Enums\VideoProvider;
 use App\Transcript\Contracts\TranscriptProvider;
 use App\Transcript\Data\ChapterData;
@@ -24,6 +25,7 @@ final class FakeTranscriptProvider implements TranscriptProvider
             ),
             languageCode: 'pt-BR',
             languageName: 'Português',
+            source: TranscriptSource::Manual,
             segments: [
                 new TranscriptSegmentData(0, 45_000, 'Neste exemplo, começamos identificando as ideias centrais apresentadas no vídeo.'),
                 new TranscriptSegmentData(45_000, 75_000, 'A divisão em trechos mantém o texto conectado ao momento correspondente.'),
