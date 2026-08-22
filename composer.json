@@ -51,7 +51,7 @@
         ],
         "test": [
             "APP_ENV=testing php artisan config:clear --ansi @no_additional_args",
-            "APP_ENV=testing php artisan test"
+            "APP_ENV=testing php artisan test --do-not-cache-result --cache-directory=/tmp/pest-cache"
         ],
         "analyse": "phpstan analyse --memory-limit=1G",
         "format": "pint",

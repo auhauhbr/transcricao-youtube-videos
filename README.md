@@ -23,3 +23,9 @@ composer lint
 composer analyse
 npm run build
 ```
+
+A suíte normal é totalmente offline. O smoke test externo do provider YouTube é opt-in e deve ser executado somente no worker:
+
+```bash
+docker compose exec -T -e RUN_EXTERNAL_YOUTUBE_TESTS=1 queue php artisan test tests/External/YouTubeTranscriptProviderExternalTest.php --do-not-cache-result --cache-directory=/tmp/pest-cache
+```

@@ -1,0 +1,12 @@
+{
+  "id": "jNQXAC9IVRw",
+  "title": "Exemplo sem capítulos",
+  "channel": "Canal de testes",
+  "duration": 19,
+  "language": "en",
+  "subtitles": {
+    "en": [{"ext": "json3", "name": "English", "url": "https://captions.example.test/manual"}]
+  },
+  "automatic_captions": {},
+  "chapters": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "dQw4w9WgXcQ",
+  "title": "Vídeo demonstrativo",
+  "channel": "Canal de testes",
+  "duration": 185.125,
+  "thumbnail": "https://i.example.test/thumb.jpg",
+  "language": "pt-BR",
+  "subtitles": {
+    "en": [{"ext": "json3", "name": "English", "url": "https://captions.example.test/manual-en"}],
+    "pt-BR": [{"ext": "json3", "name": "Português (Brasil)", "url": "https://captions.example.test/manual-pt"}]
+  },
+  "automatic_captions": {
+    "pt-BR-orig": [{"ext": "json3", "name": "Português (Original)", "url": "https://captions.example.test/asr"}],
+    "es": [{"ext": "json3", "name": "Español", "url": "https://captions.example.test/asr?tlang=es"}]
+  },
+  "chapters": [
+    {"title": "Conclusão", "start_time": 120.25},
+    {"title": "Introdução", "start_time": 0, "end_time": 60.125},
+    {"title": "Desenvolvimento", "start_time": 60.125, "end_time": 120.25},
+    {"title": "", "start_time": 150}
+  ]
+}

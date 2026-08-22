@@ -1,0 +1,10 @@
+{
+  "wireMagic": "pb3",
+  "events": [
+    {"tStartMs": 0, "dDurationMs": 2500, "segs": [{"utf8": "Texto "}, {"utf8": "demonstrativo."}]},
+    {"tStartMs": 2500, "dDurationMs": 3000, "segs": [{"utf8": "Unicode: ação, café e 🎬."}]},
+    {"tStartMs": 5500, "dDurationMs": 1000},
+    {"tStartMs": 6500, "dDurationMs": 1200, "segs": [{"utf8": "  \n\t  "}]},
+    {"tStartMs": 7700, "dDurationMs": 1800, "segs": [{"utf8": "Texto <b>literal</b>, não HTML confiável."}]}
+  ]
+}

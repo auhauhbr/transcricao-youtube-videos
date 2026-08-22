@@ -1,0 +1,16 @@
+{
+  "id": "sCChyBh8x_M",
+  "title": "Exemplo com legenda automática",
+  "uploader": "Canal automático",
+  "duration": 299,
+  "thumbnail": "http://unsafe.example.test/thumb.jpg",
+  "language": "en",
+  "subtitles": {},
+  "automatic_captions": {
+    "af": [{"ext": "json3", "name": "Afrikaans", "url": "https://captions.example.test/asr?tlang=af"}],
+    "en": [{"ext": "json3", "name": "English", "url": "https://captions.example.test/asr?expire=1"}],
+    "en-orig": [{"ext": "json3", "name": "English (Original)", "url": "https://captions.example.test/asr?expire=1"}],
+    "pt-BR": [{"ext": "json3", "name": "Português", "url": "https://captions.example.test/asr?tlang=pt-BR"}]
+  },
+  "chapters": null
+}

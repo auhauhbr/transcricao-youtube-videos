@@ -1,0 +1,11 @@
+{
+  "wireMagic": "pb3",
+  "events": [
+    {"tStartMs": 0, "dDurationMs": 3000, "wWinId": 1, "segs": [{"utf8": "Construa"}]},
+    {"tStartMs": 800, "dDurationMs": 3200, "wWinId": 1, "segs": [{"utf8": "Construa com segurança"}]},
+    {"tStartMs": 1200, "dDurationMs": 3500, "wWinId": 1, "segs": [{"utf8": "Construa com segurança"}]},
+    {"tStartMs": 2000, "dDurationMs": 3000, "wWinId": 1, "segs": [{"utf8": "sem apagar repetições válidas"}]},
+    {"tStartMs": 5000, "dDurationMs": 2000, "wWinId": 2, "segs": [{"utf8": "olá olá, mundo"}]},
+    {"tStartMs": 7000, "dDurationMs": 1500, "segs": [{"utf8": "\n"}]}
+  ]
+}
