@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Guest\GuestExtractionQuota;
-use App\Models\GuestUsage;
+use App\Guest\GuestIdentity;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,7 +38,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+        $guestIdentity = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
 
         return [
             ...parent::share($request),
@@ -50,9 +50,9 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                 ],
             ],
-            'anonymousQuota' => $user !== null || ! $guestUsage instanceof GuestUsage
+            'anonymousQuota' => $user !== null || ! $guestIdentity instanceof GuestIdentity
                 ? null
-                : app(GuestExtractionQuota::class)->summary($guestUsage),
+                : app(GuestExtractionQuota::class)->summary($guestIdentity->usage),
             'flash' => [
                 'status' => fn (): ?string => $request->session()->get('status'),
             ],

@@ -21,12 +21,12 @@ final class RequestTranscriptExtraction
         string $providerVideoId,
         ?string $requestedLanguage = null,
         ?User $user = null,
-        ?GuestUsage $guestUsage = null,
+        ?string $guestTokenHash = null,
     ): Extraction {
         $this->validateIdentity($provider, $providerVideoId);
         $requestedLanguage = $this->normalizeLanguage($requestedLanguage);
 
-        if (($user === null) === ($guestUsage === null)) {
+        if (($user === null) === ($guestTokenHash === null)) {
             throw new InvalidArgumentException('Exactly one extraction owner context must be provided.');
         }
 
@@ -41,7 +41,7 @@ final class RequestTranscriptExtraction
         }
 
         return $this->guestQuota->reserve(
-            $guestUsage,
+            $guestTokenHash,
             fn (GuestUsage $lockedUsage): Extraction => $this->createExtraction(
                 $provider,
                 $providerVideoId,

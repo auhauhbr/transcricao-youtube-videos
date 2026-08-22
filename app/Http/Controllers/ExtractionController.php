@@ -5,17 +5,18 @@ namespace App\Http\Controllers;
 use App\Enums\ExtractionErrorCode;
 use App\Enums\ExtractionStatus;
 use App\Models\Extraction;
-use App\Models\Transcript;
-use App\Transcript\TranscriptBlockBuilder;
+use App\Models\UserTranscript;
+use App\Transcript\TranscriptResultPresenter;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ExtractionController extends Controller
 {
-    public function __construct(private readonly TranscriptBlockBuilder $blockBuilder) {}
+    public function __construct(private readonly TranscriptResultPresenter $presenter) {}
 
-    public function __invoke(Extraction $extraction): Response
+    public function __invoke(Request $request, Extraction $extraction): Response
     {
         $extraction->load('video');
 
@@ -35,11 +36,24 @@ class ExtractionController extends Controller
                 ]);
             }
 
+            $result = $this->presenter->present($extraction->transcript);
+            $libraryUrl = null;
+
+            if ($request->user() !== null) {
+                $libraryItem = UserTranscript::query()
+                    ->where('user_id', $request->user()->getKey())
+                    ->where('transcript_id', $extraction->transcript->getKey())
+                    ->first(['public_id']);
+                $libraryUrl = $libraryItem === null
+                    ? null
+                    : route('library.show', $libraryItem->public_id, absolute: false);
+            }
+
             return Inertia::render('Extractions/Show', [
                 'extraction' => $this->extractionData($extraction),
-                'video' => $this->readyVideoData($extraction),
-                'transcript' => $this->transcriptData($extraction->transcript),
+                ...$result,
                 'downloadUrl' => route('extractions.download', $extraction, absolute: false),
+                'libraryUrl' => $libraryUrl,
             ]);
         }
 
@@ -73,59 +87,6 @@ class ExtractionController extends Controller
         return [
             'providerVideoId' => $extraction->video->provider_video_id,
             'title' => $extraction->video->title,
-        ];
-    }
-
-    /** @return array{providerVideoId: string, title: string, channelName: string, channelId: string|null, thumbnailUrl: string|null, durationSeconds: int, youtubeUrl: string} */
-    private function readyVideoData(Extraction $extraction): array
-    {
-        $video = $extraction->video;
-
-        return [
-            'providerVideoId' => $video->provider_video_id,
-            'title' => $video->title ?? 'Transcrição do YouTube',
-            'channelName' => $video->channel_name ?? 'Canal não informado',
-            'channelId' => $video->channel_id,
-            'thumbnailUrl' => $video->thumbnail_url,
-            'durationSeconds' => $video->duration_seconds ?? 0,
-            'youtubeUrl' => "https://www.youtube.com/watch?v={$video->provider_video_id}",
-        ];
-    }
-
-    /**
-     * @return array{
-     *   languageCode: string,
-     *   languageName: string|null,
-     *   source: string,
-     *   wordCount: int,
-     *   characterCount: int,
-     *   blocks: list<array{position: int, startMs: int, endMs: int, text: string, chapterPosition: int|null}>,
-     *   chapters: list<array{position: int, title: string, startMs: int, endMs: int}>
-     * }
-     */
-    private function transcriptData(Transcript $transcript): array
-    {
-        $segments = $transcript->segments->map(fn ($segment): array => [
-            'position' => $segment->position,
-            'startMs' => $segment->start_ms,
-            'endMs' => $segment->end_ms,
-            'text' => $segment->text,
-        ])->all();
-        $chapters = $transcript->chapters->map(fn ($chapter): array => [
-            'position' => $chapter->position,
-            'title' => $chapter->title,
-            'startMs' => $chapter->start_ms,
-            'endMs' => $chapter->end_ms,
-        ])->all();
-
-        return [
-            'languageCode' => $transcript->language_code,
-            'languageName' => $transcript->language_name,
-            'source' => $transcript->source->value,
-            'wordCount' => $transcript->word_count,
-            'characterCount' => $transcript->character_count,
-            'blocks' => $this->blockBuilder->build($segments, $chapters),
-            'chapters' => $chapters,
         ];
     }
 

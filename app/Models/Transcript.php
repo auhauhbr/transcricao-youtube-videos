@@ -53,4 +53,10 @@ class Transcript extends Model
     {
         return $this->hasMany(Extraction::class);
     }
+
+    /** @return HasMany<UserTranscript, $this> */
+    public function userTranscripts(): HasMany
+    {
+        return $this->hasMany(UserTranscript::class);
+    }
 }

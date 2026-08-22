@@ -7,7 +7,8 @@ use App\Models\GuestUsage;
 final readonly class GuestIdentity
 {
     public function __construct(
-        public GuestUsage $usage,
+        public string $tokenHash,
+        public ?GuestUsage $usage,
         public ?string $tokenToSet,
     ) {}
 }

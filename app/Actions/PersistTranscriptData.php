@@ -16,6 +16,8 @@ final class PersistTranscriptData
 {
     private const INSERT_CHUNK_SIZE = 1000;
 
+    public function __construct(private readonly EnsureUserTranscript $ensureUserTranscript) {}
+
     public function handle(Extraction $extraction, TranscriptData $data): Transcript
     {
         [$segmentRows, $wordCount, $characterCount] = $this->prepareSegments($data->segments);
@@ -29,7 +31,10 @@ final class PersistTranscriptData
                 ->findOrFail($extraction->getKey());
 
             if ($lockedExtraction->status === ExtractionStatus::Ready && $lockedExtraction->transcript_id !== null) {
-                return Transcript::query()->findOrFail($lockedExtraction->transcript_id);
+                $transcript = Transcript::query()->findOrFail($lockedExtraction->transcript_id);
+                $this->ensureLibraryItem($lockedExtraction, $transcript);
+
+                return $transcript;
             }
 
             if ($lockedExtraction->status !== ExtractionStatus::Processing) {
@@ -96,6 +101,7 @@ final class PersistTranscriptData
             }
 
             $lockedExtraction->markReady($transcript);
+            $this->ensureLibraryItem($lockedExtraction, $transcript);
 
             return $transcript;
         });
@@ -169,6 +175,13 @@ final class PersistTranscriptData
 
         if ($video->provider_video_id !== $data->video->providerVideoId) {
             throw new TranscriptProviderException('The provider returned metadata for a different video.');
+        }
+    }
+
+    private function ensureLibraryItem(Extraction $extraction, Transcript $transcript): void
+    {
+        if ($extraction->user_id !== null) {
+            $this->ensureUserTranscript->handle((int) $extraction->user_id, (int) $transcript->getKey());
         }
     }
 }

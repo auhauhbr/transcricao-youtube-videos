@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthenticatedSessionController;
+use App\Http\Controllers\DownloadLibraryTranscriptController;
 use App\Http\Controllers\DownloadTranscriptController;
 use App\Http\Controllers\ExtractionController;
 use App\Http\Controllers\ExtractTranscriptController;
+use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,6 +33,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
     Route::patch('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+
+    Route::get('/library', LibraryController::class)->name('library.index');
+    Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
+        ->whereUlid('userTranscript')
+        ->name('library.download');
+    Route::get('/library/{userTranscript}', [LibraryTranscriptController::class, 'show'])
+        ->whereUlid('userTranscript')
+        ->name('library.show');
+    Route::delete('/library/{userTranscript}', [LibraryTranscriptController::class, 'destroy'])
+        ->whereUlid('userTranscript')
+        ->name('library.destroy');
 });
 
 Route::post('/transcripts/extract', ExtractTranscriptController::class)

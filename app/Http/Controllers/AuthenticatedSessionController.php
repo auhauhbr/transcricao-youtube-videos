@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ClaimGuestExtractions;
+use App\Guest\GuestIdentity;
 use App\Http\Middleware\EnsureGuestIdentity;
 use App\Http\Requests\LoginRequest;
-use App\Models\GuestUsage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,10 +35,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = $request->user();
-        $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+        $guestIdentity = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
 
         if ($user !== null) {
-            $claimExtractions->handle($user, $guestUsage instanceof GuestUsage ? $guestUsage : null);
+            $claimExtractions->handle(
+                $user,
+                $guestIdentity instanceof GuestIdentity ? $guestIdentity->usage : null,
+            );
         }
 
         return redirect()->intended(route('home'));

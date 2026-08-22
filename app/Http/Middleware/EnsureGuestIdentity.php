@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final readonly class EnsureGuestIdentity
 {
-    public const ATTRIBUTE = 'guest_usage';
+    public const ATTRIBUTE = 'guest_identity';
 
     public function __construct(
         private GuestIdentityManager $identityManager,
@@ -24,7 +24,7 @@ final readonly class EnsureGuestIdentity
         }
 
         $identity = $this->identityManager->resolve($request);
-        $request->attributes->set(self::ATTRIBUTE, $identity->usage);
+        $request->attributes->set(self::ATTRIBUTE, $identity);
         $response = $next($request);
 
         if ($identity->tokenToSet !== null) {

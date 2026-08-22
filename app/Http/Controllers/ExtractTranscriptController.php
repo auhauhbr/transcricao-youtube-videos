@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\RequestTranscriptExtraction;
 use App\Enums\VideoProvider;
 use App\Exceptions\AnonymousQuotaExceededException;
+use App\Guest\GuestIdentity;
 use App\Http\Middleware\EnsureGuestIdentity;
 use App\Http\Requests\ExtractTranscriptRequest;
-use App\Models\GuestUsage;
 use App\Support\YouTube\InvalidYouTubeUrlException;
 use App\Support\YouTube\YouTubeUrlParser;
 use Illuminate\Http\RedirectResponse;
@@ -30,12 +30,14 @@ class ExtractTranscriptController extends Controller
 
         try {
             $user = $request->user();
-            $guestUsage = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+            $guestIdentity = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
             $extraction = $requestExtraction->handle(
                 provider: VideoProvider::YouTube,
                 providerVideoId: $providerVideoId,
                 user: $user,
-                guestUsage: $user === null && $guestUsage instanceof GuestUsage ? $guestUsage : null,
+                guestTokenHash: $user === null && $guestIdentity instanceof GuestIdentity
+                    ? $guestIdentity->tokenHash
+                    : null,
             );
         } catch (AnonymousQuotaExceededException) {
             throw ValidationException::withMessages([

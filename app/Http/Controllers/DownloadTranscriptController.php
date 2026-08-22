@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ExtractionStatus;
 use App\Http\Requests\DownloadTranscriptRequest;
 use App\Models\Extraction;
-use App\Transcript\Export\TranscriptExporter;
-use App\Transcript\Export\TranscriptExportFilename;
+use App\Transcript\Export\TranscriptDownloadResponse;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -15,8 +14,7 @@ class DownloadTranscriptController extends Controller
     public function __invoke(
         DownloadTranscriptRequest $request,
         Extraction $extraction,
-        TranscriptExporter $exporter,
-        TranscriptExportFilename $filename,
+        TranscriptDownloadResponse $downloadResponse,
     ): StreamedResponse {
         abort_unless($extraction->status === ExtractionStatus::Ready, 409);
 
@@ -32,20 +30,6 @@ class DownloadTranscriptController extends Controller
             abort(409);
         }
 
-        $transcript->setRelation('video', $extraction->video);
-        $options = $request->options();
-
-        return response()->streamDownload(
-            static function () use ($exporter, $transcript, $options): void {
-                foreach ($exporter->chunks($transcript, $options) as $chunk) {
-                    echo $chunk;
-                }
-            },
-            $filename->make($extraction->video, $options),
-            [
-                'Content-Type' => $options->format->contentType(),
-                'X-Content-Type-Options' => 'nosniff',
-            ],
-        );
+        return $downloadResponse->make($transcript, $extraction->video, $request->options());
     }
 }

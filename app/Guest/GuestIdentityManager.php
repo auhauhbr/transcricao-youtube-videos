@@ -20,13 +20,12 @@ final class GuestIdentityManager
             $tokenToSet = $token;
         }
 
-        $usage = GuestUsage::query()->firstOrCreate([
-            'token_hash' => hash('sha256', $token),
-        ], [
-            'used_slots' => 0,
-        ]);
+        $tokenHash = hash('sha256', $token);
+        $usage = GuestUsage::query()
+            ->where('token_hash', $tokenHash)
+            ->first();
 
-        return new GuestIdentity($usage, $tokenToSet);
+        return new GuestIdentity($tokenHash, $usage, $tokenToSet);
     }
 
     private function generateToken(): string
