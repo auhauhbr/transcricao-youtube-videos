@@ -3,6 +3,7 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
+            target: app
         env_file: .env
         volumes:
             - ./.env:/var/www/html/.env:ro
@@ -38,6 +39,8 @@ services:
         build:
             context: .
             dockerfile: docker/php/Dockerfile
+            target: worker
+        user: www-data
         command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
         env_file: .env
         volumes:
