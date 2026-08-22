@@ -25,6 +25,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    downloadUrl: {
+        type: String,
+        default: null,
+    },
 });
 
 const pollingStatuses = new Set(['pending', 'processing']);
@@ -79,7 +83,7 @@ const runPoll = () => {
 
     pollInFlight = true;
     router.reload({
-        only: ['extraction', 'video', 'transcript', 'failureMessage'],
+        only: ['extraction', 'video', 'transcript', 'failureMessage', 'downloadUrl'],
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
@@ -127,7 +131,7 @@ onBeforeUnmount(() => {
     </Head>
 
     <PublicLayout :app-name="appName">
-        <TranscriptResult v-if="hasReadyResult" :transcript="transcript" :video="video" />
+        <TranscriptResult v-if="hasReadyResult" :transcript="transcript" :video="video" :download-url="downloadUrl" />
 
         <section v-else class="flex flex-1 items-center border-b border-border bg-background">
             <div class="mx-auto flex w-full max-w-3xl items-center px-5 py-16 sm:px-8 sm:py-20">

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
+import TranscriptDownloadDialog from './TranscriptDownloadDialog.vue';
 import VideoSummaryCard from './VideoSummaryCard.vue';
 
 const props = defineProps({
@@ -10,6 +11,10 @@ const props = defineProps({
     },
     video: {
         type: Object,
+        required: true,
+    },
+    downloadUrl: {
+        type: String,
         required: true,
     },
 });
@@ -241,6 +246,7 @@ const copyTranscript = async () => {
                             >
                                 Autoscroll: {{ autoscrollEnabled ? 'ON' : 'OFF' }}
                             </button>
+                            <TranscriptDownloadDialog :download-url="downloadUrl" />
                             <button
                                 type="button"
                                 class="inline-flex h-10 items-center justify-center bg-accent px-4 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
