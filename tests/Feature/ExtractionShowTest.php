@@ -88,6 +88,7 @@ test('a pending extraction has a small polling payload', function () {
             ->where('extraction.completedAt', null)
             ->where('video.providerVideoId', 'dQw4w9WgXcQ')
             ->where('video.title', null)
+            ->missing('downloadUrl')
             ->missing('transcript')
             ->missing('failureMessage')
         );
@@ -139,6 +140,7 @@ test('a ready extraction exposes only ordered public transcript data', function 
             ->missing('transcript.segments')
             ->where('transcript.chapters.0.position', 0)
             ->where('transcript.chapters.1.position', 1)
+            ->where('downloadUrl', "/extractions/{$extraction->public_id}/download")
             ->missing('failureMessage')
             ->missing('extraction.id')
             ->missing('extraction.user_id')
