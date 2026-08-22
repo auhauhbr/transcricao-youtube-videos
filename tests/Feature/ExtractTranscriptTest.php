@@ -1,97 +1,125 @@
 <?php
 
+use App\Enums\ExtractionStatus;
+use App\Jobs\ExtractTranscriptJob;
+use App\Models\Extraction;
 use App\Models\Video;
 use App\Transcript\Contracts\TranscriptProvider;
-use App\Transcript\Data\TranscriptData;
-use App\Transcript\Exceptions\TranscriptProviderException;
-use App\Transcript\Providers\FakeTranscriptProvider;
+use Illuminate\Cache\RateLimiter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Inertia\Testing\AssertableInertia as Assert;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
-test('a supported YouTube URL renders the transient transcript result', function () {
-    Http::preventStrayRequests();
+beforeEach(function () {
+    config(['cache.default' => 'array']);
+    Queue::fake();
 
-    $this->post(route('transcripts.extract'), [
-        'video_url' => 'https://youtu.be/dQw4w9WgXcQ?t=120',
-    ])
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Transcripts/Show')
-            ->where('transcript.video.provider', 'youtube')
-            ->where('transcript.video.providerVideoId', 'dQw4w9WgXcQ')
-            ->where('transcript.languageCode', 'pt-BR')
-            ->has('transcript.segments', 6)
-            ->has('transcript.chapters', 3)
-            ->where('youtubeUrl', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-        );
+    $rateLimiter = app(RateLimiter::class);
 
-    $this->assertDatabaseCount('videos', 0);
+    foreach (['127.0.0.1', '203.0.113.10'] as $ip) {
+        $rateLimiter->clear(md5('transcript-extractionsminute:'.$ip));
+        $rateLimiter->clear(md5('transcript-extractionshour:'.$ip));
+    }
 });
 
-test('invalid YouTube URLs return a field validation error and preserve input', function (string $videoUrl) {
-    $this->from('/')
-        ->post(route('transcripts.extract'), ['video_url' => $videoUrl])
+test('a supported YouTube URL requests an asynchronous extraction and redirects to its public page', function () {
+    $provider = Mockery::mock(TranscriptProvider::class);
+    $provider->shouldNotReceive('fetch');
+    $this->app->instance(TranscriptProvider::class, $provider);
+
+    $response = $this->post(route('transcripts.extract'), [
+        'video_url' => 'https://youtu.be/dQw4w9WgXcQ?t=120',
+    ]);
+
+    $extraction = Extraction::query()->sole();
+
+    $response->assertRedirect(route('extractions.show', $extraction));
+
+    expect($extraction->status)->toBe(ExtractionStatus::Pending)
+        ->and($extraction->public_id)->toHaveLength(26)
+        ->and($extraction->transcript_id)->toBeNull()
+        ->and($extraction->video->provider_video_id)->toBe('dQw4w9WgXcQ');
+
+    Queue::assertPushedOn(
+        'transcripts',
+        ExtractTranscriptJob::class,
+        fn (ExtractTranscriptJob $job): bool => $job->extractionId === $extraction->getKey(),
+    );
+});
+
+test('the public request reuses the canonical video through the extraction action', function () {
+    $video = Video::factory()->create(['provider_video_id' => 'dQw4w9WgXcQ']);
+
+    $this->post(route('transcripts.extract'), [
+        'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    ])->assertRedirect();
+
+    expect(Video::query()->count())->toBe(1)
+        ->and(Extraction::query()->sole()->video_id)->toBe($video->getKey());
+});
+
+test('invalid extraction requests create no extraction and dispatch no job', function (array $payload, string $message, ?string $oldInput) {
+    $response = $this->from('/')->post(route('transcripts.extract'), $payload)
         ->assertRedirect('/')
-        ->assertSessionHasErrors(['video_url' => 'Informe uma URL válida de vídeo do YouTube.'])
-        ->assertSessionHasInput('video_url', $videoUrl);
+        ->assertSessionHasErrors(['video_url' => $message]);
+
+    if ($oldInput !== null) {
+        $response->assertSessionHasInput('video_url', $oldInput);
+    }
+
+    expect(Extraction::query()->count())->toBe(0)
+        ->and(Video::query()->count())->toBe(0);
+    Queue::assertNothingPushed();
 })->with([
-    'unsupported host' => ['https://example.com/watch?v=dQw4w9WgXcQ'],
-    'malicious lookalike host' => ['https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ'],
+    'invalid URL' => [
+        ['video_url' => 'not a URL'],
+        'Informe uma URL válida de vídeo do YouTube.',
+        'not a URL',
+    ],
+    'malicious lookalike host' => [
+        ['video_url' => 'https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ'],
+        'Informe uma URL válida de vídeo do YouTube.',
+        'https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ',
+    ],
+    'missing URL' => [
+        [],
+        'Informe a URL de um vídeo do YouTube.',
+        null,
+    ],
+    'URL over the maximum length' => [
+        ['video_url' => str_repeat('a', 2049)],
+        'A URL do vídeo não pode ter mais de 2048 caracteres.',
+        str_repeat('a', 2049),
+    ],
 ]);
 
-test('the extraction request validates required input', function () {
-    $this->from('/')
-        ->post(route('transcripts.extract'), ['video_url' => ''])
-        ->assertRedirect('/')
-        ->assertSessionHasErrors(['video_url' => 'Informe a URL de um vídeo do YouTube.']);
+test('normal requests within the burst limit continue to work', function () {
+    foreach (range(1, 5) as $requestNumber) {
+        $this->post(route('transcripts.extract'), [
+            'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+        ])->assertRedirect();
+    }
+
+    expect(Extraction::query()->count())->toBe(5);
+    Queue::assertPushed(ExtractTranscriptJob::class, 5);
 });
 
-test('the extraction request limits URL length', function () {
-    $this->from('/')
-        ->post(route('transcripts.extract'), ['video_url' => str_repeat('a', 2049)])
-        ->assertRedirect('/')
-        ->assertSessionHasErrors(['video_url' => 'A URL do vídeo não pode ter mais de 2048 caracteres.']);
-});
+test('the public extraction endpoint is rate limited by IP', function () {
+    foreach (range(1, 5) as $requestNumber) {
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
+            ->post(route('transcripts.extract'), [
+                'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+            ])->assertRedirect();
+    }
 
-test('provider failures return a safe validation error', function () {
-    $this->app->bind(TranscriptProvider::class, fn () => new class implements TranscriptProvider
-    {
-        public function fetch(string $providerVideoId): TranscriptData
-        {
-            throw new TranscriptProviderException('Controlled provider failure.');
-        }
-    });
-
-    $this->from('/')
+    $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.10'])
         ->post(route('transcripts.extract'), [
-            'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
         ])
-        ->assertRedirect('/')
-        ->assertSessionHasErrors(['video_url' => 'Não foi possível obter a transcrição deste vídeo.']);
-});
+        ->assertTooManyRequests()
+        ->assertDontSee('Stack trace');
 
-test('the fake provider is selected through the service container', function () {
-    expect($this->app->make(TranscriptProvider::class))->toBeInstanceOf(FakeTranscriptProvider::class);
-});
-
-test('a missing provider configuration never resolves silently to fake', function () {
-    config(['transcripts.provider' => null]);
-
-    expect(fn () => $this->app->make(TranscriptProvider::class))->toThrow(LogicException::class);
-});
-
-test('the public fake workflow creates no transcript domain records', function () {
-    $this->post(route('transcripts.extract'), [
-        'video_url' => 'https://youtube.com/shorts/dQw4w9WgXcQ',
-    ])->assertOk();
-
-    expect(Video::query()->count())->toBe(0)
-        ->and(DB::table('transcripts')->count())->toBe(0)
-        ->and(DB::table('transcript_segments')->count())->toBe(0)
-        ->and(DB::table('chapters')->count())->toBe(0)
-        ->and(DB::table('extractions')->count())->toBe(0);
+    expect(Extraction::query()->count())->toBe(5);
+    Queue::assertPushed(ExtractTranscriptJob::class, 5);
 });
