@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                 : app(GuestExtractionQuota::class)->summary($guestIdentity->usage),
             'flash' => [
                 'status' => fn (): ?string => $request->session()->get('status'),
+                'message' => fn (): ?string => $request->session()->get('message'),
             ],
         ];
     }

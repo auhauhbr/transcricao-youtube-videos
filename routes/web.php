@@ -6,7 +6,10 @@ use App\Http\Controllers\DownloadLibraryTranscriptController;
 use App\Http\Controllers\DownloadTranscriptController;
 use App\Http\Controllers\ExtractionController;
 use App\Http\Controllers\ExtractTranscriptController;
+use App\Http\Controllers\LibraryBulkController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\LibraryFolderController;
+use App\Http\Controllers\LibraryTagController;
 use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +38,16 @@ Route::middleware('auth')->group(function () {
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
 
     Route::get('/library', LibraryController::class)->name('library.index');
+    Route::post('/library/folders', [LibraryFolderController::class, 'store'])->name('library.folders.store');
+    Route::patch('/library/folders/{folder}', [LibraryFolderController::class, 'update'])->whereUlid('folder')->name('library.folders.update');
+    Route::delete('/library/folders/{folder}', [LibraryFolderController::class, 'destroy'])->whereUlid('folder')->name('library.folders.destroy');
+    Route::post('/library/tags', [LibraryTagController::class, 'store'])->name('library.tags.store');
+    Route::patch('/library/tags/{tag}', [LibraryTagController::class, 'update'])->whereUlid('tag')->name('library.tags.update');
+    Route::delete('/library/tags/{tag}', [LibraryTagController::class, 'destroy'])->whereUlid('tag')->name('library.tags.destroy');
+    Route::patch('/library/items/move', [LibraryBulkController::class, 'move'])->name('library.items.move');
+    Route::post('/library/items/tags', [LibraryBulkController::class, 'addTags'])->name('library.items.tags.add');
+    Route::delete('/library/items/tags', [LibraryBulkController::class, 'removeTags'])->name('library.items.tags.remove');
+    Route::delete('/library/items', [LibraryBulkController::class, 'destroy'])->name('library.items.destroy');
     Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
         ->whereUlid('userTranscript')
         ->name('library.download');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\FindUserTranscript;
+use App\Actions\RemoveLibraryItems;
 use App\Transcript\TranscriptResultPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,9 +32,11 @@ class LibraryTranscriptController extends Controller
         Request $request,
         string $userTranscript,
         FindUserTranscript $findUserTranscript,
+        RemoveLibraryItems $removeItems,
     ): RedirectResponse {
-        $findUserTranscript->handle($request->user(), $userTranscript)->delete();
+        $item = $findUserTranscript->handle($request->user(), $userTranscript);
+        $removeItems->handle($request->user(), [$item->public_id]);
 
-        return to_route('library.index')->with('status', 'library-item-removed');
+        return to_route('library.index')->with('status', 'library-item-removed')->with('message', 'Transcrição removida da biblioteca.');
     }
 }

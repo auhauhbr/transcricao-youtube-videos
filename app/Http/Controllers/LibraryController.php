@@ -2,27 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LibraryIndexRequest;
+use App\Library\UserLibraryQuery;
+use App\Models\Folder;
+use App\Models\Tag;
 use App\Models\UserTranscript;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LibraryController extends Controller
 {
-    private const ITEMS_PER_PAGE = 20;
-
-    public function __invoke(Request $request): Response
+    public function __invoke(LibraryIndexRequest $request, UserLibraryQuery $libraryQuery): Response
     {
-        $items = UserTranscript::query()
-            ->where('user_id', $request->user()->getKey())
-            ->with([
-                'transcript:id,video_id,language_code,language_name,source',
-                'transcript.video:id,title,channel_name,thumbnail_url,duration_seconds',
-            ])
-            ->latest('created_at')
-            ->latest('id')
-            ->paginate(self::ITEMS_PER_PAGE)
-            ->withQueryString();
+        $user = $request->user();
+        $filters = $request->filters();
+        $items = $libraryQuery->paginate($user, $filters);
+        $folders = Folder::query()
+            ->where('user_id', $user->getKey())
+            ->withCount('userTranscripts')
+            ->orderBy('name')
+            ->get(['id', 'public_id', 'name']);
+        $tags = Tag::query()
+            ->where('user_id', $user->getKey())
+            ->orderBy('name')
+            ->get(['public_id', 'name']);
+        $allCount = UserTranscript::query()->where('user_id', $user->getKey())->count();
+        $unfiledCount = UserTranscript::query()->where('user_id', $user->getKey())->whereNull('folder_id')->count();
 
         return Inertia::render('Library/Index', [
             'library' => [
@@ -35,6 +40,18 @@ class LibraryController extends Controller
                     'previousPageUrl' => $items->previousPageUrl(),
                     'nextPageUrl' => $items->nextPageUrl(),
                 ],
+                'folders' => $folders->map(fn (Folder $folder): array => [
+                    'publicId' => $folder->public_id,
+                    'name' => $folder->name,
+                    'count' => $folder->user_transcripts_count,
+                ])->all(),
+                'tags' => $tags->map(fn (Tag $tag): array => [
+                    'publicId' => $tag->public_id,
+                    'name' => $tag->name,
+                ])->all(),
+                'counts' => ['all' => $allCount, 'unfiled' => $unfiledCount],
+                'languages' => $libraryQuery->languageOptions($user),
+                'filters' => $filters,
             ],
         ]);
     }
@@ -47,11 +64,14 @@ class LibraryController extends Controller
      *   thumbnailUrl: string|null,
      *   durationSeconds: int,
      *   languageCode: string,
-     *   languageName: string|null,
+     *   languageLabel: string,
+     *   source: string,
      *   sourceLabel: string,
      *   addedAt: string,
      *   showUrl: string,
-     *   destroyUrl: string
+     *   destroyUrl: string,
+     *   folder: array{publicId: string, name: string}|null,
+     *   tags: array<int, array{publicId: string, name: string}>
      * }
      */
     private function itemData(UserTranscript $item): array
@@ -66,11 +86,20 @@ class LibraryController extends Controller
             'thumbnailUrl' => $video->thumbnail_url,
             'durationSeconds' => $video->duration_seconds ?? 0,
             'languageCode' => $transcript->language_code,
-            'languageName' => $transcript->language_name,
+            'languageLabel' => $transcript->language_name ?: $transcript->language_code,
+            'source' => $transcript->source->value,
             'sourceLabel' => $transcript->source->publicLabel(),
             'addedAt' => $item->created_at->toIso8601String(),
             'showUrl' => route('library.show', $item->public_id, absolute: false),
             'destroyUrl' => route('library.destroy', $item->public_id, absolute: false),
+            'folder' => $item->folder === null ? null : [
+                'publicId' => $item->folder->public_id,
+                'name' => $item->folder->name,
+            ],
+            'tags' => $item->tags->map(fn (Tag $tag): array => [
+                'publicId' => $tag->public_id,
+                'name' => $tag->name,
+            ])->all(),
         ];
     }
 }
