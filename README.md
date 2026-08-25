@@ -2,6 +2,14 @@
 
 Base técnica do projeto em Laravel, Inertia.js, Vue 3, JavaScript e Tailwind CSS, com PostgreSQL e Redis.
 
+## Recursos
+
+- extração assíncrona e visualização estruturada de transcrições do YouTube;
+- biblioteca pessoal compacta com pastas e tags;
+- busca por vídeo, canal e tag, com filtros e ordenação;
+- seleção múltipla para mover, etiquetar ou remover itens da biblioteca;
+- downloads individuais em TXT e Markdown.
+
 ## Desenvolvimento com Docker
 
 ```bash
