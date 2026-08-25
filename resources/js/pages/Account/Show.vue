@@ -1,5 +1,7 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import FlashToast from '../../components/FlashToast.vue';
 import PublicLayout from '../../layouts/PublicLayout.vue';
 
 const props = defineProps({
@@ -19,6 +21,12 @@ const passwordForm = useForm({
     password: '',
     password_confirmation: '',
 });
+const flashMessage = computed(() => {
+    if (props.flash.status === 'profile-updated') return 'Dados da conta atualizados.';
+    if (props.flash.status === 'password-updated') return 'Senha atualizada com segurança.';
+
+    return null;
+});
 
 const updateProfile = () => profileForm.patch(props.profileUrl, { preserveScroll: true });
 const updatePassword = () =>
@@ -35,15 +43,12 @@ const updatePassword = () =>
     </Head>
 
     <PublicLayout :app-name="appName">
+        <FlashToast :flash-id="flash.id" :message="flashMessage" />
         <section class="flex-1 border-b border-border bg-background">
             <div class="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
                 <a href="/" class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">← Voltar</a>
                 <p class="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-accent">Configurações</p>
                 <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Minha conta</h1>
-
-                <p v-if="flash.status" class="mt-6 border border-border bg-card px-4 py-3 text-sm text-muted-foreground" aria-live="polite">
-                    {{ flash.status === 'profile-updated' ? 'Dados da conta atualizados.' : 'Senha atualizada com segurança.' }}
-                </p>
 
                 <div class="mt-8 grid gap-6 md:grid-cols-2">
                     <section class="border border-border bg-card p-6" aria-labelledby="profile-title">

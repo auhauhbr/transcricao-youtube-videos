@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Guest\GuestExtractionQuota;
 use App\Guest\GuestIdentity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -39,6 +40,10 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $guestIdentity = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
+        $flashStatus = $request->session()->get('status');
+        $flashMessage = $request->session()->get('message');
+        $flashStatus = is_string($flashStatus) ? $flashStatus : null;
+        $flashMessage = is_string($flashMessage) ? $flashMessage : null;
 
         return [
             ...parent::share($request),
@@ -54,8 +59,9 @@ class HandleInertiaRequests extends Middleware
                 ? null
                 : app(GuestExtractionQuota::class)->summary($guestIdentity->usage),
             'flash' => [
-                'status' => fn (): ?string => $request->session()->get('status'),
-                'message' => fn (): ?string => $request->session()->get('message'),
+                'id' => $flashStatus !== null || $flashMessage !== null ? (string) Str::ulid() : null,
+                'status' => $flashStatus,
+                'message' => $flashMessage,
             ],
         ];
     }

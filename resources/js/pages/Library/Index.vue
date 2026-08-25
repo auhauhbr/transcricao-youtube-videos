@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import FlashToast from '../../components/FlashToast.vue';
 import PublicLayout from '../../layouts/PublicLayout.vue';
 import { formatDate } from '../../utils/formatDate.js';
 import { formatTimestamp } from '../../utils/formatTimestamp.js';
@@ -125,13 +126,13 @@ onBeforeUnmount(() => { window.clearTimeout(searchTimer); document.removeEventLi
 <template>
     <Head title="Biblioteca"><meta name="robots" content="noindex, nofollow" /></Head>
     <PublicLayout :app-name="appName">
+        <FlashToast :flash-id="flash.id" :message="flash.message" />
         <section class="flex-1 border-b border-border bg-background">
             <div class="mx-auto max-w-7xl px-4 py-7 sm:px-8 sm:py-10 lg:px-10">
                 <header class="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-6">
                     <div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Organização pessoal</p><h1 class="mt-2 text-3xl font-semibold tracking-tight text-foreground">Biblioteca</h1><p class="mt-2 text-sm text-muted-foreground">{{ library.counts.all }} {{ library.counts.all === 1 ? 'transcrição' : 'transcrições' }}</p></div>
                     <Link href="/" class="inline-flex h-10 items-center bg-action px-4 text-sm font-semibold text-action-foreground hover:bg-action-hover">Nova transcrição</Link>
                 </header>
-                <p v-if="flash.message" class="mt-5 border border-border bg-card px-4 py-3 text-sm text-muted-foreground" aria-live="polite">{{ flash.message }}</p>
                 <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
                     <label class="relative block"><span class="sr-only">Buscar na biblioteca</span><input v-model="search" type="search" placeholder="Buscar na biblioteca..." class="h-11 w-full border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground" /></label>
                     <button type="button" class="h-11 border border-border bg-card px-4 text-sm font-semibold hover:border-accent" :aria-expanded="filtersOpen" @click="filtersOpen = !filtersOpen">Filtros</button>
