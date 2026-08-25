@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 /** @property string $public_id */
-#[Fillable(['user_id', 'transcript_id'])]
+#[Fillable(['user_id', 'transcript_id', 'folder_id'])]
 class UserTranscript extends Model
 {
     protected static function booted(): void
@@ -33,5 +34,17 @@ class UserTranscript extends Model
     public function transcript(): BelongsTo
     {
         return $this->belongsTo(Transcript::class);
+    }
+
+    /** @return BelongsTo<Folder, $this> */
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(Folder::class);
+    }
+
+    /** @return BelongsToMany<Tag, $this> */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
     }
 }

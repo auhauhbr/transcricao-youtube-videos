@@ -42,4 +42,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserTranscript::class);
     }
+
+    /** @return HasMany<Folder, $this> */
+    public function folders(): HasMany
+    {
+        return $this->hasMany(Folder::class);
+    }
+
+    /** @return HasMany<Tag, $this> */
+    public function tags(): HasMany
+    {
+        return $this->hasMany(Tag::class);
+    }
 }
