@@ -8,7 +8,8 @@ Base técnica do projeto em Laravel, Inertia.js, Vue 3, JavaScript e Tailwind CS
 - biblioteca pessoal compacta com pastas e tags;
 - busca por vídeo, canal e tag, com filtros e ordenação;
 - seleção múltipla para mover, etiquetar ou remover itens da biblioteca;
-- Workspace pessoal com documento editável em Tiptap e autosave concorrente seguro;
+- Workspace pessoal com documento editável em Tiptap, autosave concorrente seguro e histórico de versões;
+- checkpoints automáticos espaçados, versões manuais e restauração com backup do estado anterior;
 - downloads individuais em TXT e Markdown.
 
 ## Desenvolvimento com Docker
