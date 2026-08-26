@@ -1,4 +1,4 @@
-# Plataforma de Transcrições
+# Transcrev
 
 Base técnica do projeto em Laravel, Inertia.js, Vue 3, JavaScript e Tailwind CSS, com PostgreSQL e Redis.
 
