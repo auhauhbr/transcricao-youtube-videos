@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import DocumentEditor from '../../components/DocumentEditor.vue';
+import ExportDocumentDialog from '../../components/ExportDocumentDialog.vue';
 import FlashToast from '../../components/FlashToast.vue';
 import RestoreRevisionDialog from '../../components/RestoreRevisionDialog.vue';
 import RevisionHistoryPanel from '../../components/RevisionHistoryPanel.vue';
@@ -31,6 +32,8 @@ const revisionActionBusy = ref(false);
 const restoreTarget = ref(null);
 const feedback = ref(null);
 const feedbackId = ref(0);
+const exportOpen = ref(false);
+const exportBusy = ref(false);
 let saveTimer = null;
 let inFlightSave = null;
 let allowNavigation = false;
@@ -128,6 +131,23 @@ const ensureSaved = async () => {
     if (saving.value && inFlightSave) await inFlightSave;
     if (dirty.value) await saveNow();
     return status.value === 'saved' && !dirty.value && !saving.value;
+};
+const exportDocument = async (format) => {
+    exportBusy.value = true;
+    const saved = await ensureSaved();
+    if (!saved || lockVersion.value === null) {
+        showFeedback(saved ? 'Salve o documento antes de exportar.' : 'As alterações precisam ser salvas antes da exportação.');
+        exportBusy.value = false;
+        return;
+    }
+    exportOpen.value = false;
+    const link = document.createElement('a');
+    link.href = `${props.workspace.urls.export}?format=${encodeURIComponent(format)}`;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    exportBusy.value = false;
 };
 const openHistory = () => {
     historyOpen.value = true;
@@ -252,6 +272,7 @@ onBeforeUnmount(() => {
                 <header class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
                     <div><Link :href="workspace.urls.library" class="ui-button-ghost px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Biblioteca</Link><p class="ui-eyebrow mt-2">Workspace pessoal</p><h1 class="mt-1 text-xl font-semibold sm:text-2xl">{{ title }}</h1></div>
                     <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" class="ui-button-secondary" aria-label="Exportar documento editado" @click="exportOpen = true"><i class="bi bi-download" aria-hidden="true"></i> Exportar</button>
                         <button type="button" class="ui-button-secondary" aria-label="Abrir histórico de versões" @click="openHistory"><i class="bi bi-clock-history" aria-hidden="true"></i> Histórico</button>
                         <Link :href="workspace.urls.show" class="ui-button-secondary"><i class="bi bi-eye" aria-hidden="true"></i> Ver original</Link>
                     </div>
@@ -306,5 +327,6 @@ onBeforeUnmount(() => {
             @page="loadHistory"
         />
         <RestoreRevisionDialog :open="restoreTarget !== null" :busy="revisionActionBusy" @cancel="restoreTarget = null" @confirm="confirmRestore" />
+        <ExportDocumentDialog :open="exportOpen" :busy="exportBusy" @close="exportOpen = false" @export="exportDocument" />
     </PublicLayout>
 </template>
