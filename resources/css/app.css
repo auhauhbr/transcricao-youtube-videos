@@ -31,6 +31,66 @@
     --radius: 2px;
 }
 
+@layer components {
+    .document-editor-content {
+        min-height: clamp(30rem, 62vh, 54rem);
+        padding: 1.5rem;
+        color: var(--foreground);
+        font-size: 0.975rem;
+        line-height: 1.75;
+        outline: none;
+        overflow-wrap: anywhere;
+    }
+
+    .document-editor-content p + p,
+    .document-editor-content p + ul,
+    .document-editor-content p + ol,
+    .document-editor-content p + blockquote,
+    .document-editor-content ul + p,
+    .document-editor-content ol + p,
+    .document-editor-content blockquote + p {
+        margin-top: 1rem;
+    }
+
+    .document-editor-content h2 {
+        margin-block: 1.75rem 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 650;
+        line-height: 1.3;
+    }
+
+    .document-editor-content h3 {
+        margin-block: 1.4rem 0.6rem;
+        font-size: 1.2rem;
+        font-weight: 650;
+        line-height: 1.35;
+    }
+
+    .document-editor-content ul,
+    .document-editor-content ol {
+        margin-block: 0.8rem;
+        padding-left: 1.6rem;
+    }
+
+    .document-editor-content ul { list-style: disc; }
+    .document-editor-content ol { list-style: decimal; }
+
+    .document-editor-content blockquote {
+        margin-block: 1rem;
+        border-left: 3px solid var(--accent);
+        padding-left: 1rem;
+        color: var(--muted-foreground);
+    }
+
+    .document-editor-content p.is-editor-empty:first-child::before {
+        float: left;
+        height: 0;
+        color: var(--muted-secondary);
+        content: 'Comece a escrever...';
+        pointer-events: none;
+    }
+}
+
 .dark {
     --background: #0f1720;
     --foreground: #eef2f5;
