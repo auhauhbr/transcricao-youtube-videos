@@ -71,21 +71,20 @@ const quotaMessage = () => {
 
     <PublicLayout :app-name="appName">
         <section id="inicio" class="border-b border-border bg-background">
-            <div class="mx-auto max-w-7xl px-5 pb-16 pt-20 sm:px-8 sm:pb-24 sm:pt-28 lg:px-10 lg:pb-28 lg:pt-36">
+            <div class="mx-auto max-w-7xl px-5 pb-12 pt-14 sm:px-8 sm:pb-16 sm:pt-20 lg:px-10 lg:pb-20 lg:pt-24">
                 <div class="max-w-5xl">
-                    <p class="mb-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                        <span class="h-px w-8 bg-accent" aria-hidden="true"></span>
-                        Conteúdo primeiro
+                    <p class="ui-eyebrow mb-4 flex items-center gap-2.5">
+                        <i class="bi bi-file-text" aria-hidden="true"></i> Conteúdo primeiro
                     </p>
-                    <h1 class="max-w-4xl text-5xl font-semibold leading-[0.96] tracking-[-0.045em] text-foreground sm:text-6xl lg:text-8xl">
+                    <h1 class="max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-foreground sm:text-5xl lg:text-6xl">
                         Transforme vídeos em texto.
                     </h1>
-                    <p class="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
+                    <p class="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
                         Uma ferramenta para obter e organizar transcrições de vídeos do YouTube com clareza, contexto e estrutura.
                     </p>
                 </div>
 
-                <form class="mt-12 max-w-5xl" :aria-busy="form.processing" @submit.prevent="submit">
+                <form class="mt-9 max-w-5xl" :aria-busy="form.processing" @submit.prevent="submit">
                     <label for="video-url" class="mb-3 block text-sm font-semibold text-foreground">URL do vídeo</label>
                     <div class="flex flex-col gap-3 sm:flex-row">
                         <input
@@ -99,16 +98,16 @@ const quotaMessage = () => {
                             placeholder="https://youtube.com/watch?v=..."
                             :aria-invalid="form.errors.video_url ? 'true' : 'false'"
                             :aria-describedby="form.errors.video_url ? 'video-url-error' : undefined"
-                            class="h-14 min-w-0 flex-1 border border-border bg-card px-4 text-base text-foreground placeholder:text-muted-foreground/70 focus:border-accent focus:outline-none disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-5"
+                            class="ui-input h-12 min-w-0 flex-1 px-4 text-base placeholder:text-muted-foreground/70 disabled:cursor-wait disabled:opacity-70"
                             :disabled="form.processing"
                         />
                         <button
                             ref="submitButton"
                             type="submit"
-                            class="h-14 shrink-0 bg-action px-8 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover disabled:cursor-wait disabled:opacity-70 sm:h-16 sm:px-10"
+                            class="ui-button-primary h-12 shrink-0 px-7"
                             :disabled="form.processing"
                         >
-                            {{ form.processing ? 'Enviando...' : 'Extrair' }}
+                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i> {{ form.processing ? 'Enviando...' : 'Extrair' }}
                         </button>
                     </div>
                     <p v-if="form.errors.video_url" id="video-url-error" class="mt-3 text-sm font-medium text-destructive">
@@ -125,7 +124,7 @@ const quotaMessage = () => {
 
                 <ul class="mt-7 flex max-w-5xl flex-wrap gap-x-7 gap-y-3" aria-label="Benefícios planejados">
                     <li v-for="benefit in benefits" :key="benefit" class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span class="size-1.5 bg-accent" aria-hidden="true"></span>
+                        <i class="bi bi-check2 text-accent" aria-hidden="true"></i>
                         {{ benefit }}
                     </li>
                 </ul>
@@ -133,7 +132,7 @@ const quotaMessage = () => {
         </section>
 
         <section class="border-b border-border bg-muted" aria-labelledby="preview-title">
-            <div class="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24 lg:px-10">
+            <div class="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
                 <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Prévia conceitual</p>
@@ -144,7 +143,7 @@ const quotaMessage = () => {
                     <p class="max-w-md text-sm leading-6 text-muted-foreground">Uma representação estática da experiência de transcrição planejada.</p>
                 </div>
 
-                <div class="border border-border bg-card shadow-[0_18px_60px_rgba(0,0,0,0.06)] dark:shadow-none">
+                <div class="ui-panel">
                     <div class="flex h-11 items-center justify-between border-b border-border px-4 sm:px-5">
                         <div class="flex items-center gap-1.5" aria-hidden="true">
                             <span class="size-2 border border-border bg-muted"></span>

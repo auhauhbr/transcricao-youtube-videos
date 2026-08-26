@@ -145,10 +145,10 @@ onBeforeUnmount(() => {
 
         <section v-else class="flex flex-1 items-center border-b border-border bg-background">
             <div class="mx-auto flex w-full max-w-3xl items-center px-5 py-16 sm:px-8 sm:py-20">
-                <div class="w-full border border-border bg-card p-7 shadow-[0_18px_60px_rgba(0,0,0,0.05)] sm:p-10 dark:shadow-none">
+                <div class="ui-panel w-full p-6 sm:p-8">
                     <template v-if="extraction.status === 'pending'">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Na fila</p>
-                        <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Preparando sua transcrição</h1>
+                        <p class="ui-eyebrow"><i class="bi bi-hourglass-split mr-1" aria-hidden="true"></i> Na fila</p>
+                        <h1 class="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Preparando sua transcrição</h1>
                         <p class="mt-4 text-base leading-7 text-muted-foreground" aria-live="polite">
                             A solicitação está aguardando processamento.
                         </p>
@@ -156,18 +156,18 @@ onBeforeUnmount(() => {
 
                     <template v-else-if="extraction.status === 'processing'">
                         <div class="flex items-center gap-3 text-accent" aria-hidden="true">
-                            <span class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"></span>
+                            <i class="bi bi-arrow-repeat motion-safe:animate-spin" aria-hidden="true"></i>
                             <span class="text-xs font-semibold uppercase tracking-[0.18em]">Em processamento</span>
                         </div>
-                        <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Processando transcrição</h1>
+                        <h1 class="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Processando transcrição</h1>
                         <p class="mt-4 text-base leading-7 text-muted-foreground" aria-live="polite">
                             Isso normalmente leva alguns segundos.
                         </p>
                     </template>
 
                     <template v-else>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-destructive">Não concluída</p>
-                        <h1 class="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                        <p class="ui-eyebrow text-destructive"><i class="bi bi-exclamation-circle mr-1" aria-hidden="true"></i> Não concluída</p>
+                        <h1 class="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                             Não foi possível obter a transcrição
                         </h1>
                         <p class="mt-4 text-base leading-7 text-muted-foreground" role="alert">
@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
                         </p>
                         <Link
                             href="/"
-                            class="mt-8 inline-flex h-11 items-center bg-action px-5 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover"
+                            class="ui-button-primary mt-7"
                         >
                             Voltar à página inicial
                         </Link>

@@ -28,11 +28,11 @@ const submit = (loginUrl) => {
 
     <PublicLayout :app-name="appName">
         <section class="flex flex-1 items-center border-b border-border bg-background">
-            <div class="mx-auto w-full max-w-lg px-5 py-14 sm:px-8 sm:py-20">
-                <div class="border border-border bg-card p-7 sm:p-9">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Sua conta</p>
+            <div class="mx-auto w-full max-w-md px-5 py-10 sm:px-8 sm:py-14">
+                <div class="ui-panel p-6 sm:p-8">
+                    <p class="ui-eyebrow">Acesso</p>
                     <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground">Entrar</h1>
-                    <p class="mt-3 text-sm leading-6 text-muted-foreground">Continue extraindo transcrições sem o limite anônimo.</p>
+                    <p class="mt-3 text-sm leading-6 text-muted-foreground">Acesse sua biblioteca e continue trabalhando nas suas transcrições.</p>
 
                     <form class="mt-8 space-y-5" :aria-busy="form.processing" @submit.prevent="submit(loginUrl)">
                         <div>
@@ -46,7 +46,7 @@ const submit = (loginUrl) => {
                                 autofocus
                                 :aria-invalid="form.errors.email ? 'true' : 'false'"
                                 :aria-describedby="form.errors.email ? 'login-email-error' : undefined"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                             <p v-if="form.errors.email" id="login-email-error" class="mt-2 text-sm font-medium text-destructive">{{ form.errors.email }}</p>
@@ -62,7 +62,7 @@ const submit = (loginUrl) => {
                                 autocomplete="current-password"
                                 :aria-invalid="form.errors.password ? 'true' : 'false'"
                                 :aria-describedby="form.errors.password ? 'login-password-error' : undefined"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                             <p v-if="form.errors.password" id="login-password-error" class="mt-2 text-sm font-medium text-destructive">{{ form.errors.password }}</p>
@@ -75,10 +75,10 @@ const submit = (loginUrl) => {
 
                         <button
                             type="submit"
-                            class="inline-flex h-12 w-full items-center justify-center bg-red-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-800 disabled:cursor-wait disabled:opacity-70"
+                            class="ui-button-primary w-full"
                             :disabled="form.processing"
                         >
-                            {{ form.processing ? 'Entrando...' : 'Entrar' }}
+                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ form.processing ? 'Entrando...' : 'Entrar' }}
                         </button>
                     </form>
 
@@ -86,6 +86,8 @@ const submit = (loginUrl) => {
                         Ainda não possui conta?
                         <Link :href="registerUrl" class="font-semibold text-foreground underline decoration-border underline-offset-4 hover:text-accent">Criar conta</Link>
                     </p>
+                    <div class="mt-5 flex items-center gap-3 text-xs text-muted-foreground"><span class="h-px flex-1 bg-border"></span><span>ou</span><span class="h-px flex-1 bg-border"></span></div>
+                    <Link href="/" class="ui-button-secondary mt-5 w-full">Continuar sem conta</Link>
                 </div>
             </div>
         </section>

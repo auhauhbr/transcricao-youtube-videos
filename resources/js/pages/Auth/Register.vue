@@ -29,9 +29,9 @@ const submit = (registerUrl) => {
 
     <PublicLayout :app-name="appName">
         <section class="flex flex-1 items-center border-b border-border bg-background">
-            <div class="mx-auto w-full max-w-lg px-5 py-14 sm:px-8 sm:py-20">
-                <div class="border border-border bg-card p-7 sm:p-9">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Acesso contínuo</p>
+            <div class="mx-auto w-full max-w-md px-5 py-10 sm:px-8 sm:py-14">
+                <div class="ui-panel p-6 sm:p-8">
+                    <p class="ui-eyebrow">Acesso contínuo</p>
                     <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground">Criar conta</h1>
                     <p class="mt-3 text-sm leading-6 text-muted-foreground">Suas transcrições deste navegador serão associadas à conta.</p>
 
@@ -47,7 +47,7 @@ const submit = (registerUrl) => {
                                 autofocus
                                 :aria-invalid="form.errors.name ? 'true' : 'false'"
                                 :aria-describedby="form.errors.name ? 'register-name-error' : undefined"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                             <p v-if="form.errors.name" id="register-name-error" class="mt-2 text-sm font-medium text-destructive">{{ form.errors.name }}</p>
@@ -63,7 +63,7 @@ const submit = (registerUrl) => {
                                 autocomplete="email"
                                 :aria-invalid="form.errors.email ? 'true' : 'false'"
                                 :aria-describedby="form.errors.email ? 'register-email-error' : undefined"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                             <p v-if="form.errors.email" id="register-email-error" class="mt-2 text-sm font-medium text-destructive">{{ form.errors.email }}</p>
@@ -79,7 +79,7 @@ const submit = (registerUrl) => {
                                 autocomplete="new-password"
                                 :aria-invalid="form.errors.password ? 'true' : 'false'"
                                 :aria-describedby="form.errors.password ? 'register-password-error' : 'register-password-help'"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                             <p id="register-password-help" class="mt-2 text-xs text-muted-foreground">Use pelo menos 8 caracteres.</p>
@@ -94,17 +94,17 @@ const submit = (registerUrl) => {
                                 name="password_confirmation"
                                 type="password"
                                 autocomplete="new-password"
-                                class="mt-2 h-12 w-full border border-border bg-background px-4 text-foreground outline-none focus:border-accent disabled:opacity-70"
+                                class="ui-input mt-2 disabled:opacity-70"
                                 :disabled="form.processing"
                             />
                         </div>
 
                         <button
                             type="submit"
-                            class="inline-flex h-12 w-full items-center justify-center bg-red-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-800 disabled:cursor-wait disabled:opacity-70"
+                            class="ui-button-primary w-full"
                             :disabled="form.processing"
                         >
-                            {{ form.processing ? 'Criando conta...' : 'Criar conta' }}
+                            <i class="bi bi-person-plus" aria-hidden="true"></i> {{ form.processing ? 'Criando conta...' : 'Criar conta' }}
                         </button>
                     </form>
 

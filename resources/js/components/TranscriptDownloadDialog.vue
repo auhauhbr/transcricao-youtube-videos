@@ -49,15 +49,15 @@ onBeforeUnmount(() => {
     <button
         ref="trigger"
         type="button"
-        class="inline-flex h-10 items-center justify-center border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+        class="ui-button-secondary"
         @click="openDialog"
     >
-        Baixar
+        <i class="bi bi-download" aria-hidden="true"></i> Baixar
     </button>
 
     <dialog
         ref="dialog"
-        class="m-auto w-[calc(100%-2rem)] max-w-md border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+        class="ui-dialog m-auto w-[calc(100%-2rem)] max-w-md p-0"
         aria-labelledby="download-dialog-title"
         aria-describedby="download-dialog-description"
         @close="restoreTriggerFocus"
@@ -73,11 +73,11 @@ onBeforeUnmount(() => {
                 </div>
                 <button
                     type="button"
-                    class="inline-flex size-10 shrink-0 items-center justify-center border border-border text-xl leading-none text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                    class="ui-button-ghost size-10 shrink-0 px-0 text-base"
                     aria-label="Fechar modal de download"
                     @click="closeDialog"
                 >
-                    <span aria-hidden="true">×</span>
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
                 </button>
             </div>
 
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
                         ref="formatSelect"
                         v-model="format"
                         name="format"
-                        class="mt-2 h-11 w-full border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25"
+                        class="ui-input mt-2 text-sm"
                     >
                         <option value="txt">TXT</option>
                         <option value="md">Markdown</option>
@@ -102,7 +102,7 @@ onBeforeUnmount(() => {
                         id="download-mode"
                         v-model="mode"
                         name="mode"
-                        class="mt-2 h-11 w-full border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/25"
+                        class="ui-input mt-2 text-sm"
                     >
                         <option value="formatted">Formatado</option>
                         <option value="segmented">Segmentado</option>
@@ -126,16 +126,16 @@ onBeforeUnmount(() => {
             <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                     type="button"
-                    class="inline-flex h-11 items-center justify-center border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                    class="ui-button-secondary"
                     @click="closeDialog"
                 >
                     Cancelar
                 </button>
                 <button
                     type="submit"
-                    class="inline-flex h-11 items-center justify-center bg-red-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-800"
+                    class="ui-button-primary"
                 >
-                    Baixar transcrição
+                    <i class="bi bi-download" aria-hidden="true"></i> Baixar transcrição
                 </button>
             </div>
         </form>

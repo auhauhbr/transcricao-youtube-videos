@@ -65,7 +65,7 @@ defineExpose({ open });
 <template>
     <dialog
         ref="dialog"
-        class="m-auto w-[calc(100%-2rem)] max-w-md border border-border bg-card p-0 text-foreground shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+        class="ui-dialog m-auto w-[calc(100%-2rem)] max-w-md p-0"
         aria-labelledby="remove-library-title"
         aria-describedby="remove-library-description"
         @close="restoreFocus"
@@ -81,7 +81,7 @@ defineExpose({ open });
                 <button
                     ref="cancelButton"
                     type="button"
-                    class="inline-flex h-11 items-center justify-center border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                    class="ui-button-secondary"
                     :disabled="removing"
                     @click="close"
                 >
@@ -89,11 +89,11 @@ defineExpose({ open });
                 </button>
                 <button
                     type="button"
-                    class="inline-flex h-11 items-center justify-center bg-red-700 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-800 disabled:cursor-wait disabled:opacity-70"
+                    class="ui-button-danger"
                     :disabled="removing"
                     @click="remove"
                 >
-                    {{ removing ? 'Removendo...' : 'Remover' }}
+                    <i class="bi bi-trash" aria-hidden="true"></i> {{ removing ? 'Removendo...' : 'Remover' }}
                 </button>
             </div>
         </div>

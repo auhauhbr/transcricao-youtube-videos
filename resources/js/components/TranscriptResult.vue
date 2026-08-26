@@ -203,23 +203,23 @@ const copyTranscript = async () => {
 
 <template>
     <article class="flex-1 bg-background">
-        <div class="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <header class="border-b border-border pb-7">
+        <div class="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+            <header class="border-b border-border pb-5">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <Link :href="backUrl" class="inline-flex text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                        ← {{ backLabel }}
+                    <Link :href="backUrl" class="ui-button-ghost px-0">
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i> {{ backLabel }}
                     </Link>
                     <Link
                         v-if="libraryUrl"
                         :href="libraryUrl"
-                        class="inline-flex h-10 items-center border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                        class="ui-button-secondary"
                     >
                         Abrir na biblioteca
                     </Link>
                 </div>
-                <div class="mt-6 min-w-0 max-w-5xl">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Transcrição pronta</p>
-                    <h1 class="mt-3 text-3xl font-semibold leading-tight tracking-[-0.035em] text-foreground sm:text-4xl">
+                <div class="mt-5 min-w-0 max-w-5xl">
+                    <p class="ui-eyebrow">Transcrição pronta</p>
+                    <h1 class="mt-2 text-2xl font-semibold leading-tight tracking-[-0.025em] text-foreground sm:text-3xl">
                         {{ video.title }}
                     </h1>
                     <p class="mt-3 text-sm text-muted-foreground sm:text-base">
@@ -228,11 +228,11 @@ const copyTranscript = async () => {
                 </div>
             </header>
 
-            <div class="mt-7 grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-8">
+            <div class="mt-6 grid items-start gap-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
                 <aside class="space-y-5 lg:sticky lg:top-24">
                     <VideoSummaryCard ref="videoCard" :video="video" @time-update="updateCurrentTime" />
 
-                    <nav v-if="transcript.chapters.length" class="border border-border bg-card p-5" aria-labelledby="chapters-title">
+                    <nav v-if="transcript.chapters.length" class="ui-panel p-4" aria-labelledby="chapters-title">
                         <div class="flex items-center justify-between gap-4">
                             <h2 id="chapters-title" class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Capítulos</h2>
                             <span class="text-xs text-muted-foreground">{{ transcript.chapters.length }}</span>
@@ -253,8 +253,8 @@ const copyTranscript = async () => {
                     </nav>
                 </aside>
 
-                <section class="min-w-0 border border-border bg-card" aria-labelledby="transcript-title">
-                    <div class="flex flex-col gap-5 border-b border-border p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+                <section class="ui-panel min-w-0" aria-labelledby="transcript-title">
+                    <div class="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                         <div>
                             <h2 id="transcript-title" class="text-xl font-semibold tracking-tight text-foreground">Transcrição completa</h2>
                             <p class="mt-1.5 text-xs leading-5 text-muted-foreground">
@@ -264,19 +264,20 @@ const copyTranscript = async () => {
                         <div class="flex shrink-0 flex-wrap items-center gap-2">
                             <button
                                 type="button"
-                                class="inline-flex h-10 items-center justify-center border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                                class="ui-button-secondary"
                                 :aria-pressed="autoscrollEnabled"
                                 @click="toggleAutoscroll"
                             >
-                                Autoscroll: {{ autoscrollEnabled ? 'ON' : 'OFF' }}
+                                <i :class="['bi', autoscrollEnabled ? 'bi-arrow-down-circle-fill' : 'bi-arrow-down-circle']" aria-hidden="true"></i>
+                                Autoscroll {{ autoscrollEnabled ? 'ligado' : 'desligado' }}
                             </button>
                             <TranscriptDownloadDialog :download-url="downloadUrl" />
                             <button
                                 type="button"
-                                class="inline-flex h-10 items-center justify-center bg-action px-4 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover"
+                                class="ui-button-primary"
                                 @click="copyTranscript"
                             >
-                                Copiar tudo
+                                <i class="bi bi-copy" aria-hidden="true"></i> Copiar tudo
                             </button>
                         </div>
                     </div>
@@ -297,8 +298,8 @@ const copyTranscript = async () => {
                             :key="block.position"
                             :ref="(element) => setBlockElement(block.position, element)"
                             type="button"
-                            class="group grid w-full scroll-mt-24 grid-cols-[58px_minmax(0,1fr)] gap-3 border-l-2 border-transparent px-4 py-4 text-left transition-colors hover:bg-muted/70 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-5 sm:px-6 sm:py-5"
-                            :class="activeBlockPosition === block.position ? 'border-l-accent bg-accent/10' : ''"
+                            class="group grid w-full scroll-mt-24 grid-cols-[58px_minmax(0,1fr)] gap-3 border-l-2 border-transparent px-4 py-3.5 text-left transition-colors hover:bg-muted/70 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-5 sm:px-5 sm:py-4"
+                            :class="activeBlockPosition === block.position ? 'border-l-accent bg-accent/[0.07]' : ''"
                             :aria-current="activeBlockPosition === block.position ? 'true' : undefined"
                             :aria-label="`Reproduzir a partir de ${formatTimestamp(block.startMs)}: ${block.text}`"
                             @click="seekTo(block.startMs)"

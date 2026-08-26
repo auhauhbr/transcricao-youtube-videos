@@ -21,7 +21,7 @@ const durationLabel = computed(() => formatTimestamp(props.video.durationSeconds
 </script>
 
 <template>
-    <section class="border border-border bg-card" aria-labelledby="video-summary-title">
+    <section class="ui-panel" aria-labelledby="video-summary-title">
         <div class="border-b border-border">
             <YouTubePlayer
                 ref="player"
@@ -60,10 +60,9 @@ const durationLabel = computed(() => formatTimestamp(props.video.durationSeconds
                 :href="video.youtubeUrl"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="mt-5 inline-flex h-10 w-full items-center justify-center border border-border bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                class="ui-button-secondary mt-5 w-full"
             >
-                Abrir no YouTube
-                <span class="ml-2" aria-hidden="true">↗</span>
+                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Abrir no YouTube
             </a>
         </div>
     </section>
