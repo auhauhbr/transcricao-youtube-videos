@@ -1,7 +1,7 @@
 FROM php:8.5-fpm-alpine AS base
 
-RUN apk add --no-cache libpq-dev \
-    && docker-php-ext-install pdo_pgsql pcntl \
+RUN apk add --no-cache libpq-dev libzip-dev libpng-dev \
+    && docker-php-ext-install pdo_pgsql pcntl gd zip \
     && php -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
