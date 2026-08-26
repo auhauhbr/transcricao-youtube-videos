@@ -35,6 +35,10 @@ composer analyse
 npm run build
 ```
 
+## Qualidade e CI
+
+O GitHub Actions executa semanalmente e a cada alteração o lint, Larastan, suíte de testes, build do frontend e validação da imagem Docker. O Dependabot acompanha Composer, npm e GitHub Actions.
+
 A suíte normal é totalmente offline. O smoke test externo do provider YouTube é opt-in e deve ser executado somente no worker:
 
 ```bash
