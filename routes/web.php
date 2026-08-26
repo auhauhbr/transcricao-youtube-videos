@@ -12,6 +12,7 @@ use App\Http\Controllers\LibraryFolderController;
 use App\Http\Controllers\LibraryTagController;
 use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\UserDocumentRevisionController;
 use App\Http\Controllers\UserDocumentWorkspaceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -58,6 +59,20 @@ Route::middleware('auth')->group(function () {
     Route::put('/library/{userTranscript}/document', [UserDocumentWorkspaceController::class, 'update'])
         ->whereUlid('userTranscript')
         ->name('library.document.update');
+    Route::get('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'index'])
+        ->whereUlid('userTranscript')
+        ->name('library.document.revisions.index');
+    Route::post('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'store'])
+        ->whereUlid('userTranscript')
+        ->name('library.document.revisions.store');
+    Route::get('/library/{userTranscript}/document/revisions/{revision}', [UserDocumentRevisionController::class, 'show'])
+        ->whereUlid('userTranscript')
+        ->whereUlid('revision')
+        ->name('library.document.revisions.show');
+    Route::post('/library/{userTranscript}/document/revisions/{revision}/restore', [UserDocumentRevisionController::class, 'restore'])
+        ->whereUlid('userTranscript')
+        ->whereUlid('revision')
+        ->name('library.document.revisions.restore');
     Route::get('/library/{userTranscript}', [LibraryTranscriptController::class, 'show'])
         ->whereUlid('userTranscript')
         ->name('library.show');

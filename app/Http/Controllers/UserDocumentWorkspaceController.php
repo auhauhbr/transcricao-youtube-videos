@@ -7,7 +7,7 @@ use App\Actions\FindUserTranscript;
 use App\Actions\SaveUserDocument;
 use App\Exceptions\UserDocumentConflictException;
 use App\Http\Requests\SaveUserDocumentRequest;
-use App\Models\UserDocument;
+use App\Support\UserDocumentPresenter;
 use App\Transcript\TranscriptResultPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +22,7 @@ class UserDocumentWorkspaceController extends Controller
         FindUserTranscript $findUserTranscript,
         TranscriptResultPresenter $transcriptPresenter,
         BuildUserDocumentSeed $seedBuilder,
+        UserDocumentPresenter $documentPresenter,
     ): Response {
         $item = $findUserTranscript->handle($request->user(), $userTranscript);
         $item->load(['document', 'transcript.video', 'transcript.segments', 'transcript.chapters']);
@@ -30,11 +31,13 @@ class UserDocumentWorkspaceController extends Controller
         return Inertia::render('Workspace/Show', [
             'workspace' => [
                 'userTranscriptPublicId' => $item->public_id,
-                'document' => $item->document === null ? null : $this->documentData($item->document),
+                'document' => $item->document === null ? null : $documentPresenter->document($item->document),
                 'seed' => $item->document === null ? $seedBuilder->handle($item->transcript) : null,
                 'source' => $source,
                 'urls' => [
                     'save' => route('library.document.update', $item->public_id, absolute: false),
+                    'revisions' => route('library.document.revisions.index', $item->public_id, absolute: false),
+                    'createRevision' => route('library.document.revisions.store', $item->public_id, absolute: false),
                     'library' => route('library.index', absolute: false),
                     'show' => route('library.show', $item->public_id, absolute: false),
                 ],
@@ -47,6 +50,7 @@ class UserDocumentWorkspaceController extends Controller
         string $userTranscript,
         FindUserTranscript $findUserTranscript,
         SaveUserDocument $saveDocument,
+        UserDocumentPresenter $documentPresenter,
     ): JsonResponse {
         $item = $findUserTranscript->handle($request->user(), $userTranscript);
         $validated = $request->validated();
@@ -66,20 +70,11 @@ class UserDocumentWorkspaceController extends Controller
         }
 
         return response()->json(
-            ['document' => $this->documentData($result['document'])],
+            [
+                'document' => $documentPresenter->document($result['document']),
+                'automaticRevisionCreated' => $result['automaticRevisionCreated'],
+            ],
             $result['created'] ? 201 : 200,
         );
-    }
-
-    /** @return array{publicId: string, title: string, content: array<string, mixed>, lockVersion: int, updatedAt: string} */
-    private function documentData(UserDocument $document): array
-    {
-        return [
-            'publicId' => $document->public_id,
-            'title' => $document->title,
-            'content' => $document->content,
-            'lockVersion' => $document->lock_version,
-            'updatedAt' => $document->updated_at->toIso8601String(),
-        ];
     }
 }
