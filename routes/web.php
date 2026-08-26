@@ -12,6 +12,7 @@ use App\Http\Controllers\LibraryFolderController;
 use App\Http\Controllers\LibraryTagController;
 use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\UserDocumentDownloadController;
 use App\Http\Controllers\UserDocumentRevisionController;
 use App\Http\Controllers\UserDocumentWorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/library/{userTranscript}/document', [UserDocumentWorkspaceController::class, 'update'])
         ->whereUlid('userTranscript')
         ->name('library.document.update');
+    Route::get('/library/{userTranscript}/document/download', UserDocumentDownloadController::class)
+        ->whereUlid('userTranscript')
+        ->name('library.document.download');
     Route::get('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'index'])
         ->whereUlid('userTranscript')
         ->name('library.document.revisions.index');

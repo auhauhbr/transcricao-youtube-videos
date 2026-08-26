@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Actions\FindUserTranscript;
+use App\Http\Requests\DownloadUserDocumentRequest;
+use App\UserDocument\Export\UserDocumentExportRenderer;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+class UserDocumentDownloadController extends Controller
+{
+    public function __invoke(DownloadUserDocumentRequest $request, string $userTranscript, FindUserTranscript $find, UserDocumentExportRenderer $renderer): StreamedResponse
+    {
+        $item = $find->handle($request->user(), $userTranscript);
+        $document = $item->document()->firstOrFail();
+        $format = $request->validated('format');
+        $extension = $format === 'markdown' ? 'md' : $format;
+        $filename = trim(Str::slug((string) $document->title), '-');
+        $filename = mb_substr($filename !== '' ? $filename : 'documento', 0, 100).'.'.$extension;
+        $contentType = ['txt' => 'text/plain', 'markdown' => 'text/markdown', 'html' => 'text/html'][$format];
+        $content = $format === 'txt' ? $renderer->text($document) : ($format === 'markdown' ? $renderer->markdown($document) : $renderer->html($document));
+
+        return response()->streamDownload(static function () use ($content): void {
+            echo $content;
+        }, $filename, ['Content-Type' => $contentType.'; charset=UTF-8']);
+    }
+}

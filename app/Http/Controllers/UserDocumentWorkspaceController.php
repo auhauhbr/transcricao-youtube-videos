@@ -36,6 +36,7 @@ class UserDocumentWorkspaceController extends Controller
                 'source' => $source,
                 'urls' => [
                     'save' => route('library.document.update', $item->public_id, absolute: false),
+                    'export' => route('library.document.download', $item->public_id, absolute: false),
                     'revisions' => route('library.document.revisions.index', $item->public_id, absolute: false),
                     'createRevision' => route('library.document.revisions.store', $item->public_id, absolute: false),
                     'library' => route('library.index', absolute: false),
