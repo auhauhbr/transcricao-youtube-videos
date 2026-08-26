@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
-/** @property string $public_id */
+/**
+ * @property string $public_id
+ * @property-read bool $document_exists
+ */
 #[Fillable(['user_id', 'transcript_id', 'folder_id'])]
 class UserTranscript extends Model
 {
@@ -46,5 +50,11 @@ class UserTranscript extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /** @return HasOne<UserDocument, $this> */
+    public function document(): HasOne
+    {
+        return $this->hasOne(UserDocument::class);
     }
 }
