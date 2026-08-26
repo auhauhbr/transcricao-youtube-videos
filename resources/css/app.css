@@ -1,3 +1,4 @@
+@import 'bootstrap-icons/font/bootstrap-icons.css';
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -7,35 +8,50 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-    --background: #fafaf9;
-    --foreground: #18181b;
-    --muted: #f1f1ef;
-    --muted-foreground: #66666d;
-    --border: #dededb;
+    --background: #f4f6f7;
+    --foreground: #202a33;
+    --muted: #e9edef;
+    --muted-foreground: #596873;
+    --muted-secondary: #7b8791;
+    --border: #cfd6db;
+    --border-strong: #b8c2ca;
     --card: #ffffff;
-    --accent: #d92727;
-    --accent-hover: #b91f1f;
+    --panel-secondary: #eef1f3;
+    --input: #ffffff;
+    --header: #ffffff;
+    --accent: #a93f53;
+    --accent-hover: #913447;
     --accent-foreground: #ffffff;
-    --action: #b91c1c;
-    --action-hover: #991b1b;
+    --action: #a93f53;
+    --action-hover: #913447;
     --action-foreground: #ffffff;
-    --destructive: #b91c1c;
+    --destructive: #a83d4f;
+    --focus: #b7485d;
+    --shadow: 0 3px 12px rgb(27 39 49 / 0.1);
+    --radius: 2px;
 }
 
 .dark {
-    --background: #0d0d0f;
-    --foreground: #f4f4f5;
-    --muted: #1a1a1e;
-    --muted-foreground: #a1a1aa;
-    --border: #2d2d32;
-    --card: #141416;
-    --accent: #f87171;
-    --accent-hover: #fca5a5;
+    --background: #0f1720;
+    --foreground: #eef2f5;
+    --muted: #16212b;
+    --muted-foreground: #9aa7b3;
+    --muted-secondary: #74818d;
+    --border: #2b3742;
+    --border-strong: #34424f;
+    --card: #131d27;
+    --panel-secondary: #16212b;
+    --input: #101923;
+    --header: #101820;
+    --accent: #e27689;
+    --accent-hover: #d5657b;
     --accent-foreground: #ffffff;
-    --action: #c81e1e;
-    --action-hover: #a91919;
+    --action: #ad4358;
+    --action-hover: #9d394d;
     --action-foreground: #ffffff;
-    --destructive: #f87171;
+    --destructive: #e06a7e;
+    --focus: #df7185;
+    --shadow: 0 3px 14px rgb(0 0 0 / 0.22);
 }
 
 @theme inline {
@@ -45,8 +61,13 @@
     --color-foreground: var(--foreground);
     --color-muted: var(--muted);
     --color-muted-foreground: var(--muted-foreground);
+    --color-muted-secondary: var(--muted-secondary);
     --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
     --color-card: var(--card);
+    --color-panel-secondary: var(--panel-secondary);
+    --color-input: var(--input);
+    --color-header: var(--header);
     --color-accent: var(--accent);
     --color-accent-hover: var(--accent-hover);
     --color-accent-foreground: var(--accent-foreground);
@@ -73,6 +94,15 @@
     }
 
     button,
+    input,
+    select,
+    textarea,
+    dialog,
+    [role='menu'] {
+        border-radius: var(--radius);
+    }
+
+    button,
     a,
     input {
         -webkit-tap-highlight-color: transparent;
@@ -83,8 +113,122 @@
     }
 
     :focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 3px;
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+    }
+
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+        background: var(--input);
+    }
+
+    dialog::backdrop {
+        background: rgb(4 10 15 / 0.72);
+    }
+}
+
+@layer components {
+    .ui-button-primary,
+    .ui-button-secondary,
+    .ui-button-ghost,
+    .ui-button-danger {
+        display: inline-flex;
+        min-height: 2.5rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding-inline: 1rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.25rem;
+        transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+    }
+
+    .ui-button-primary {
+        background: var(--action);
+        color: var(--action-foreground);
+    }
+
+    .ui-button-primary:hover {
+        background: var(--action-hover);
+    }
+
+    .ui-button-secondary {
+        border-color: var(--border);
+        background: var(--card);
+        color: var(--foreground);
+    }
+
+    .ui-button-secondary:hover {
+        border-color: var(--border-strong);
+        background: var(--muted);
+    }
+
+    .ui-button-ghost {
+        color: var(--muted-foreground);
+    }
+
+    .ui-button-ghost:hover {
+        background: var(--muted);
+        color: var(--foreground);
+    }
+
+    .ui-button-danger {
+        border-color: color-mix(in srgb, var(--destructive) 55%, var(--border));
+        color: var(--destructive);
+    }
+
+    .ui-button-danger:hover {
+        background: color-mix(in srgb, var(--destructive) 10%, var(--card));
+    }
+
+    .ui-button-primary:disabled,
+    .ui-button-secondary:disabled,
+    .ui-button-ghost:disabled,
+    .ui-button-danger:disabled {
+        cursor: wait;
+        opacity: 0.6;
+    }
+
+    .ui-input {
+        min-height: 2.625rem;
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--input);
+        padding-inline: 0.75rem;
+        color: var(--foreground);
+    }
+
+    .ui-input:focus {
+        border-color: var(--focus);
+        outline: none;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 20%, transparent);
+    }
+
+    .ui-panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+    }
+
+    .ui-dialog {
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: var(--foreground);
+        box-shadow: var(--shadow);
+    }
+
+    .ui-eyebrow {
+        color: var(--accent);
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
     }
 }
 

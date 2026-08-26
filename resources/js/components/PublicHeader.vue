@@ -46,27 +46,30 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 border-b border-border bg-background">
-        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
+    <header class="sticky top-0 z-40 border-b border-border bg-header">
+        <div class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:px-8 lg:px-10">
             <AppWordmark :app-name="appName" />
             <div class="flex items-center gap-2 sm:gap-3">
                 <template v-if="user">
                     <nav class="hidden items-center gap-1 sm:flex" aria-label="Navegação da conta">
-                        <Link href="/library" class="inline-flex h-10 items-center px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-accent">
+                        <Link href="/library" class="ui-button-ghost">
+                            <i class="bi bi-collection" aria-hidden="true"></i>
                             Biblioteca
                         </Link>
                         <Link
                             href="/account"
-                            class="inline-flex h-10 items-center border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                            class="ui-button-secondary"
                         >
+                            <i class="bi bi-person" aria-hidden="true"></i>
                             <span class="max-w-36 truncate">{{ user.name }}</span>
                         </Link>
                         <Link
                             href="/logout"
                             method="post"
                             as="button"
-                            class="inline-flex h-10 items-center px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-accent"
+                            class="ui-button-ghost"
                         >
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                             Sair
                         </Link>
                     </nav>
@@ -74,38 +77,39 @@ onBeforeUnmount(() => {
                         <button
                             ref="mobileMenuButton"
                             type="button"
-                            class="inline-flex h-10 items-center border border-border bg-card px-3 text-xs font-semibold text-foreground"
+                            class="ui-button-secondary px-3"
                             aria-haspopup="menu"
                             :aria-expanded="mobileMenuOpen"
                             @click="mobileMenuOpen = !mobileMenuOpen"
                         >
-                            Menu
+                            <i class="bi bi-list text-base" aria-hidden="true"></i>
+                            <span class="sr-only">Menu</span>
                         </button>
                         <div
                             v-if="mobileMenuOpen"
                             role="menu"
                             aria-label="Navegação da conta"
-                            class="absolute right-0 z-50 mt-2 w-44 border border-border bg-card p-1 shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
+                            class="absolute right-0 z-50 mt-1.5 w-48 border border-border bg-card p-1 shadow-[var(--shadow)]"
                         >
                             <Link href="/library" role="menuitem" class="flex min-h-11 items-center px-3 text-sm font-semibold text-foreground hover:bg-muted" @click="closeMobileMenu">
-                                Biblioteca
+                                <i class="bi bi-collection mr-2" aria-hidden="true"></i> Biblioteca
                             </Link>
                             <Link href="/account" role="menuitem" class="flex min-h-11 items-center px-3 text-sm font-semibold text-foreground hover:bg-muted" @click="closeMobileMenu">
-                                Minha conta
+                                <i class="bi bi-person mr-2" aria-hidden="true"></i> Minha conta
                             </Link>
                             <Link href="/logout" method="post" as="button" role="menuitem" class="flex min-h-11 w-full items-center px-3 text-left text-sm font-semibold text-foreground hover:bg-muted" @click="closeMobileMenu">
-                                Sair
+                                <i class="bi bi-box-arrow-right mr-2" aria-hidden="true"></i> Sair
                             </Link>
                         </div>
                     </div>
                 </template>
                 <template v-else>
-                    <Link href="/login" class="hidden text-sm font-semibold text-muted-foreground transition-colors hover:text-accent sm:inline-flex">
+                    <Link href="/login" class="ui-button-ghost hidden sm:inline-flex">
                         Entrar
                     </Link>
                     <Link
                         href="/register"
-                        class="inline-flex h-10 items-center border border-border bg-card px-3 text-xs font-semibold text-foreground transition-colors hover:border-accent hover:text-accent sm:px-4 sm:text-sm"
+                        class="ui-button-secondary px-3 text-xs sm:px-4 sm:text-sm"
                     >
                         Criar conta
                     </Link>

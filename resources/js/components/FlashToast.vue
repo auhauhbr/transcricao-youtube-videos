@@ -51,9 +51,9 @@ onBeforeUnmount(clearDismissTimer);
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            class="pointer-events-none fixed right-4 top-20 z-50 flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 border border-border bg-card px-4 py-3 text-sm text-foreground shadow-xl"
+            class="pointer-events-none fixed right-4 top-[4.5rem] z-50 flex w-[calc(100%-2rem)] max-w-sm items-start gap-3 border border-border-strong bg-card px-4 py-3 text-sm text-foreground shadow-[var(--shadow)]"
         >
-            <span class="font-bold text-accent" aria-hidden="true">✓</span>
+            <i class="bi bi-check-circle-fill mt-0.5 text-accent" aria-hidden="true"></i>
             <span class="min-w-0 leading-5">{{ message }}</span>
         </div>
     </Transition>

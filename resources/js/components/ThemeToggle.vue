@@ -3,9 +3,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const storageKey = 'transcriptions-theme';
 const options = [
-    { value: 'system', label: 'Sistema' },
-    { value: 'light', label: 'Claro' },
-    { value: 'dark', label: 'Escuro' },
+    { value: 'system', label: 'Sistema', icon: 'bi-display' },
+    { value: 'light', label: 'Claro', icon: 'bi-sun' },
+    { value: 'dark', label: 'Escuro', icon: 'bi-moon-stars' },
 ];
 
 const root = ref(null);
@@ -81,34 +81,22 @@ onBeforeUnmount(() => {
     <div ref="root" class="relative">
         <button
             type="button"
-            class="inline-flex h-10 items-center gap-2 border border-border bg-card px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            class="ui-button-secondary px-3 text-xs"
             aria-haspopup="menu"
             :aria-expanded="isOpen"
             aria-label="Selecionar tema da interface"
             @click="isOpen = !isOpen"
         >
-            <svg v-if="preference === 'light'" viewBox="0 0 20 20" class="size-4" fill="none" aria-hidden="true">
-                <circle cx="10" cy="10" r="3.25" stroke="currentColor" stroke-width="1.5" />
-                <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.35 4.35l1.4 1.4M14.25 14.25l1.4 1.4M15.65 4.35l-1.4 1.4M5.75 14.25l-1.4 1.4" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-            <svg v-else-if="preference === 'dark'" viewBox="0 0 20 20" class="size-4" fill="none" aria-hidden="true">
-                <path d="M16.5 12.2A6.8 6.8 0 0 1 7.8 3.5 6.8 6.8 0 1 0 16.5 12.2Z" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-            <svg v-else viewBox="0 0 20 20" class="size-4" fill="none" aria-hidden="true">
-                <rect x="2.5" y="3.5" width="15" height="10" stroke="currentColor" stroke-width="1.5" />
-                <path d="M7 17h6M10 13.5V17" stroke="currentColor" stroke-width="1.5" />
-            </svg>
+            <i :class="['bi', options.find((option) => option.value === preference)?.icon]" aria-hidden="true"></i>
             <span class="hidden sm:inline">{{ currentLabel }}</span>
-            <svg viewBox="0 0 16 16" class="size-3" fill="none" aria-hidden="true">
-                <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" />
-            </svg>
+            <i class="bi bi-chevron-down text-[10px]" aria-hidden="true"></i>
         </button>
 
         <div
             v-if="isOpen"
             role="menu"
             aria-label="Preferência de tema"
-            class="absolute right-0 z-50 mt-2 w-36 border border-border bg-card p-1 shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
+            class="absolute right-0 z-50 mt-1.5 w-36 border border-border bg-card p-1 shadow-[var(--shadow)]"
         >
             <button
                 v-for="option in options"
@@ -119,8 +107,8 @@ onBeforeUnmount(() => {
                 class="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
                 @click="selectTheme(option.value)"
             >
-                {{ option.label }}
-                <span v-if="preference === option.value" class="text-accent" aria-hidden="true">●</span>
+                <span><i :class="['bi', option.icon, 'mr-2 text-muted-foreground']" aria-hidden="true"></i>{{ option.label }}</span>
+                <i v-if="preference === option.value" class="bi bi-check text-accent" aria-hidden="true"></i>
             </button>
         </div>
     </div>
