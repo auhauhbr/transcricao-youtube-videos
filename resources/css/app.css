@@ -89,6 +89,13 @@
         content: 'Comece a escrever...';
         pointer-events: none;
     }
+
+    .revision-preview-content {
+        min-height: 16rem;
+        max-height: min(52vh, 34rem);
+        overflow-y: auto;
+        padding: 1rem;
+    }
 }
 
 .dark {

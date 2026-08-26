@@ -9,3 +9,16 @@ export const formatDate = (value) => {
         dateStyle: 'medium',
     }).format(date);
 };
+
+export const formatDateTime = (value) => {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(date);
+};

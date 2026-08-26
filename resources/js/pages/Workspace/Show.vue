@@ -3,6 +3,9 @@ import axios from 'axios';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import DocumentEditor from '../../components/DocumentEditor.vue';
+import FlashToast from '../../components/FlashToast.vue';
+import RestoreRevisionDialog from '../../components/RestoreRevisionDialog.vue';
+import RevisionHistoryPanel from '../../components/RevisionHistoryPanel.vue';
 import WorkspaceSource from '../../components/WorkspaceSource.vue';
 import PublicLayout from '../../layouts/PublicLayout.vue';
 
@@ -15,7 +18,21 @@ const status = ref('saved');
 const saving = ref(false);
 const savePending = ref(false);
 const activeMobilePanel = ref('document');
+const historyOpen = ref(false);
+const historyLoaded = ref(false);
+const historyLoading = ref(false);
+const historyError = ref(null);
+const revisions = ref([]);
+const revisionPagination = ref({ currentPage: 1, lastPage: 1, perPage: 20, total: 0 });
+const selectedRevision = ref(null);
+const selectedRevisionPublicId = ref(null);
+const previewLoading = ref(false);
+const revisionActionBusy = ref(false);
+const restoreTarget = ref(null);
+const feedback = ref(null);
+const feedbackId = ref(0);
 let saveTimer = null;
+let inFlightSave = null;
 let allowNavigation = false;
 let lastSavedSnapshot = JSON.stringify({ title: title.value, content: content.value });
 const snapshot = () => JSON.stringify({ title: title.value, content: content.value });
@@ -31,39 +48,182 @@ const scheduleSave = () => {
 };
 const updateContent = (value) => { content.value = value; scheduleSave(); };
 const updateTitle = () => scheduleSave();
-const saveNow = async () => {
+const showFeedback = (message) => {
+    feedback.value = message;
+    feedbackId.value += 1;
+};
+const markConflict = () => {
+    status.value = 'conflict';
+    savePending.value = false;
+};
+const loadHistory = async (page = 1) => {
+    historyLoading.value = true;
+    historyError.value = null;
+    try {
+        const response = await axios.get(props.workspace.urls.revisions, {
+            params: { page },
+            headers: { Accept: 'application/json' },
+        });
+        revisions.value = response.data.data;
+        revisionPagination.value = response.data.meta;
+        historyLoaded.value = true;
+        selectedRevision.value = null;
+        selectedRevisionPublicId.value = null;
+    } catch {
+        historyError.value = 'Não foi possível carregar o histórico.';
+    } finally {
+        historyLoading.value = false;
+    }
+};
+const saveNow = () => {
     window.clearTimeout(saveTimer);
-    if (status.value === 'conflict' || !dirty.value) return;
-    if (saving.value) { savePending.value = true; return; }
+    if (status.value === 'conflict' || !dirty.value) return Promise.resolve(!dirty.value);
+    if (saving.value) {
+        savePending.value = true;
+        return inFlightSave || Promise.resolve(false);
+    }
 
     const sentSnapshot = snapshot();
     const payload = JSON.parse(sentSnapshot);
     saving.value = true;
     status.value = 'saving';
 
-    try {
-        const response = await axios.put(props.workspace.urls.save, { ...payload, lock_version: lockVersion.value }, { headers: { Accept: 'application/json' } });
-        lockVersion.value = response.data.document.lockVersion;
-        lastSavedSnapshot = sentSnapshot;
-        status.value = snapshot() === sentSnapshot ? 'saved' : 'dirty';
-        savePending.value = snapshot() !== sentSnapshot;
-    } catch (error) {
-        if (error.response?.status === 409 && error.response?.data?.code === 'document_conflict') {
-            status.value = 'conflict';
-        } else {
-            status.value = 'error';
+    inFlightSave = (async () => {
+        try {
+            const response = await axios.put(props.workspace.urls.save, { ...payload, lock_version: lockVersion.value }, { headers: { Accept: 'application/json' } });
+            lockVersion.value = response.data.document.lockVersion;
+            lastSavedSnapshot = sentSnapshot;
+            status.value = snapshot() === sentSnapshot ? 'saved' : 'dirty';
+            savePending.value = snapshot() !== sentSnapshot;
+            if (response.data.automaticRevisionCreated && historyLoaded.value) {
+                await loadHistory(1);
+            }
+        } catch (error) {
+            if (error.response?.status === 409 && error.response?.data?.code === 'document_conflict') {
+                markConflict();
+            } else {
+                status.value = 'error';
+            }
+            savePending.value = false;
+        } finally {
+            saving.value = false;
         }
-        savePending.value = false;
-    } finally {
-        saving.value = false;
+
         if (savePending.value && status.value !== 'conflict') {
             savePending.value = false;
-            saveNow();
+            inFlightSave = null;
+            return saveNow();
         }
-    }
+
+        inFlightSave = null;
+        return status.value === 'saved' && !dirty.value;
+    })();
+
+    return inFlightSave;
 };
 const retry = () => { status.value = 'dirty'; saveNow(); };
 const reloadLatest = () => { allowNavigation = true; window.location.reload(); };
+const ensureSaved = async () => {
+    if (status.value === 'conflict') return false;
+    if (saving.value && inFlightSave) await inFlightSave;
+    if (dirty.value) await saveNow();
+    return status.value === 'saved' && !dirty.value && !saving.value;
+};
+const openHistory = () => {
+    historyOpen.value = true;
+    if (!historyLoaded.value) loadHistory();
+};
+const selectRevision = async (revision) => {
+    selectedRevisionPublicId.value = revision.publicId;
+    selectedRevision.value = null;
+    previewLoading.value = true;
+    historyError.value = null;
+    try {
+        const response = await axios.get(revision.urls.show, { headers: { Accept: 'application/json' } });
+        if (selectedRevisionPublicId.value === revision.publicId) {
+            selectedRevision.value = { ...response.data.revision, urls: revision.urls };
+        }
+    } catch {
+        historyError.value = 'Não foi possível carregar esta versão.';
+    } finally {
+        if (selectedRevisionPublicId.value === revision.publicId) previewLoading.value = false;
+    }
+};
+const createManualRevision = async () => {
+    if (lockVersion.value === null && !dirty.value) {
+        showFeedback('Faça uma alteração no documento antes de criar uma versão.');
+        return;
+    }
+    revisionActionBusy.value = true;
+    historyError.value = null;
+    const saved = await ensureSaved();
+    if (!saved) {
+        historyError.value = status.value === 'conflict'
+            ? 'Resolva o conflito antes de criar uma versão.'
+            : 'As alterações precisam ser salvas antes de criar uma versão.';
+        revisionActionBusy.value = false;
+        return;
+    }
+    try {
+        const response = await axios.post(props.workspace.urls.createRevision, {
+            expected_lock_version: lockVersion.value,
+        }, { headers: { Accept: 'application/json' } });
+        showFeedback(response.data.created ? 'Versão criada.' : 'Nenhuma alteração desde a última versão.');
+        await loadHistory(1);
+    } catch (error) {
+        if (error.response?.status === 409 && error.response?.data?.code === 'document_conflict') {
+            markConflict();
+            historyError.value = 'Este documento foi alterado em outra aba. Recarregue a versão mais recente antes de continuar.';
+        } else {
+            historyError.value = 'Não foi possível criar a versão.';
+        }
+    } finally {
+        revisionActionBusy.value = false;
+    }
+};
+const prepareRestore = async (revision) => {
+    revisionActionBusy.value = true;
+    const saved = await ensureSaved();
+    revisionActionBusy.value = false;
+    if (saved) {
+        restoreTarget.value = revision;
+    } else {
+        historyError.value = status.value === 'conflict'
+            ? 'Resolva o conflito antes de restaurar uma versão.'
+            : 'As alterações precisam ser salvas antes da restauração.';
+    }
+};
+const confirmRestore = async () => {
+    if (!restoreTarget.value) return;
+    revisionActionBusy.value = true;
+    historyError.value = null;
+    try {
+        const response = await axios.post(restoreTarget.value.urls.restore, {
+            expected_lock_version: lockVersion.value,
+        }, { headers: { Accept: 'application/json' } });
+        const document = response.data.document;
+        window.clearTimeout(saveTimer);
+        title.value = document.title;
+        content.value = JSON.parse(JSON.stringify(document.content));
+        lockVersion.value = document.lockVersion;
+        lastSavedSnapshot = snapshot();
+        savePending.value = false;
+        status.value = 'saved';
+        showFeedback(response.data.restored ? 'Versão restaurada.' : 'O documento já corresponde a esta versão.');
+        restoreTarget.value = null;
+        await loadHistory(1);
+    } catch (error) {
+        restoreTarget.value = null;
+        if (error.response?.status === 409 && error.response?.data?.code === 'document_conflict') {
+            markConflict();
+            historyError.value = 'Este documento foi alterado em outra aba. Recarregue a versão mais recente antes de continuar.';
+        } else {
+            historyError.value = 'Não foi possível restaurar a versão.';
+        }
+    } finally {
+        revisionActionBusy.value = false;
+    }
+};
 const beforeUnload = (event) => {
     if (!unsafeToLeave.value) return;
     event.preventDefault();
@@ -91,7 +251,10 @@ onBeforeUnmount(() => {
             <div class="mx-auto max-w-[1500px] px-4 py-6 sm:px-8 lg:px-10">
                 <header class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
                     <div><Link :href="workspace.urls.library" class="ui-button-ghost px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Biblioteca</Link><p class="ui-eyebrow mt-2">Workspace pessoal</p><h1 class="mt-1 text-xl font-semibold sm:text-2xl">{{ title }}</h1></div>
-                    <Link :href="workspace.urls.show" class="ui-button-secondary"><i class="bi bi-eye" aria-hidden="true"></i> Ver original</Link>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" class="ui-button-secondary" aria-label="Abrir histórico de versões" @click="openHistory"><i class="bi bi-clock-history" aria-hidden="true"></i> Histórico</button>
+                        <Link :href="workspace.urls.show" class="ui-button-secondary"><i class="bi bi-eye" aria-hidden="true"></i> Ver original</Link>
+                    </div>
                 </header>
 
                 <div class="mt-4 grid grid-cols-2 border border-border lg:hidden" role="tablist" aria-label="Áreas do Workspace">
@@ -124,5 +287,24 @@ onBeforeUnmount(() => {
                 </div>
             </div>
         </div>
+        <FlashToast :flash-id="String(feedbackId)" :message="feedback" />
+        <RevisionHistoryPanel
+            :open="historyOpen"
+            :revisions="revisions"
+            :pagination="revisionPagination"
+            :loading="historyLoading"
+            :error="historyError"
+            :selected-public-id="selectedRevisionPublicId"
+            :selected-revision="selectedRevision"
+            :preview-loading="previewLoading"
+            :busy="revisionActionBusy"
+            :suspended="restoreTarget !== null"
+            @close="historyOpen = false"
+            @select="selectRevision"
+            @create="createManualRevision"
+            @restore="prepareRestore"
+            @page="loadHistory"
+        />
+        <RestoreRevisionDialog :open="restoreTarget !== null" :busy="revisionActionBusy" @cancel="restoreTarget = null" @confirm="confirmRestore" />
     </PublicLayout>
 </template>

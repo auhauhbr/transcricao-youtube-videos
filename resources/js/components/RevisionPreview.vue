@@ -2,33 +2,30 @@
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { onBeforeUnmount, watch } from 'vue';
 import { documentEditorExtensions } from '../utils/documentEditorExtensions.js';
-import DocumentEditorToolbar from './DocumentEditorToolbar.vue';
 
 const props = defineProps({ content: { type: Object, required: true } });
-const emit = defineEmits(['update:content']);
 const editor = useEditor({
     content: props.content,
+    editable: false,
     extensions: documentEditorExtensions(),
     editorProps: {
         attributes: {
-            class: 'document-editor-content',
-            'aria-label': 'Conteúdo editável do documento',
+            class: 'document-editor-content revision-preview-content',
+            role: 'document',
+            'aria-label': 'Conteúdo da versão selecionada, somente leitura',
         },
     },
-    onUpdate: ({ editor: currentEditor }) => emit('update:content', currentEditor.getJSON()),
 });
 
 watch(() => props.content, (value) => {
-    if (!editor.value || JSON.stringify(editor.value.getJSON()) === JSON.stringify(value)) return;
-    editor.value.commands.setContent(value, { emitUpdate: false });
+    editor.value?.commands.setContent(value, { emitUpdate: false });
 }, { deep: true });
 
 onBeforeUnmount(() => editor.value?.destroy());
 </script>
 
 <template>
-    <div class="min-w-0 border border-border bg-card">
-        <DocumentEditorToolbar :editor="editor" />
+    <div class="border border-border bg-card">
         <EditorContent :editor="editor" />
     </div>
 </template>
