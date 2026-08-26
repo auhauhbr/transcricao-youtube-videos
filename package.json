@@ -20,6 +20,7 @@
     "dependencies": {
         "@inertiajs/vue3": "^3.7.0",
         "axios": "^1.19.0",
+        "bootstrap-icons": "^1.13.1",
         "vue": "^3.5.41"
     }
 }
