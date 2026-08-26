@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $isUserDocumentSave = fn (Request $request): bool => $request->isMethod('PUT') && $request->is('library/*/document');
+
+        $middleware->trimStrings(except: [$isUserDocumentSave]);
+        $middleware->convertEmptyStringsToNull(except: [$isUserDocumentSave]);
         $middleware->web(append: [
             EnsureGuestIdentity::class,
             HandleInertiaRequests::class,

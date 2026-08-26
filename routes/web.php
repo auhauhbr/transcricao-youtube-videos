@@ -12,6 +12,7 @@ use App\Http\Controllers\LibraryFolderController;
 use App\Http\Controllers\LibraryTagController;
 use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\UserDocumentWorkspaceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -51,6 +52,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
         ->whereUlid('userTranscript')
         ->name('library.download');
+    Route::get('/library/{userTranscript}/workspace', [UserDocumentWorkspaceController::class, 'show'])
+        ->whereUlid('userTranscript')
+        ->name('library.workspace');
+    Route::put('/library/{userTranscript}/document', [UserDocumentWorkspaceController::class, 'update'])
+        ->whereUlid('userTranscript')
+        ->name('library.document.update');
     Route::get('/library/{userTranscript}', [LibraryTranscriptController::class, 'show'])
         ->whereUlid('userTranscript')
         ->name('library.show');
