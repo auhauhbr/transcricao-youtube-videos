@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -39,5 +40,11 @@ class UserDocument extends Model
     public function userTranscript(): BelongsTo
     {
         return $this->belongsTo(UserTranscript::class);
+    }
+
+    /** @return HasMany<UserDocumentRevision, $this> */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(UserDocumentRevision::class);
     }
 }
