@@ -44,13 +44,26 @@ test('exports the persisted document in txt markdown and safe standalone html', 
     if ($format === 'html') {
         expect($body)->toContain('<!doctype html>')->toContain('&lt;script&gt;')->not->toContain('<script>')->not->toContain('onerror');
     }
+    if ($format === 'pdf') {
+        expect(substr($body, 0, 4))->toBe('%PDF');
+    }
+    if ($format === 'docx') {
+        expect(substr($body, 0, 2))->toBe('PK');
+        $path = tempnam(sys_get_temp_dir(), 'docx-test-');
+        file_put_contents($path, $body);
+        $zip = new ZipArchive;
+        expect($zip->open($path))->toBeTrue();
+        expect($zip->getFromName('word/document.xml'))->toContain('script');
+        $zip->close();
+        unlink($path);
+    }
     if ($format === 'markdown') {
         expect($body)->toContain('## Título \\*literal\\*')->toContain('itálico')->toContain('**');
     }
     if ($format === 'txt') {
         expect($body)->toContain('Título *literal*')->toContain('- Item')->toContain('1. Outro')->toContain('> Citação')->toContain('<script>');
     }
-})->with([['txt', 'text/plain'], ['markdown', 'text/markdown'], ['html', 'text/html']]);
+})->with([['txt', 'text/plain'], ['markdown', 'text/markdown'], ['html', 'text/html'], ['pdf', 'application/pdf'], ['docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']]);
 
 test('document export is owner scoped, lazy and validates format', function () {
     $owner = User::factory()->create();
@@ -60,5 +73,5 @@ test('document export is owner scoped, lazy and validates format', function () {
     $missing = app(EnsureUserTranscript::class)->handle($owner->getKey(), Transcript::query()->create(['video_id' => Video::factory()->create()->getKey(), 'language_code' => 'pt-BR', 'source' => TranscriptSource::Manual, 'word_count' => 0, 'character_count' => 0, 'extracted_at' => now()])->getKey());
     $this->actingAs($owner)->get(route('library.document.download', [$missing->public_id, 'format' => 'txt']))->assertNotFound();
     $this->actingAs($other)->get(route('library.document.download', [$item->public_id, 'format' => 'txt']))->assertNotFound();
-    $this->actingAs($owner)->getJson(route('library.document.download', [$item->public_id, 'format' => 'pdf']))->assertUnprocessable();
+    $this->actingAs($owner)->getJson(route('library.document.download', [$item->public_id, 'format' => 'epub']))->assertUnprocessable();
 });
