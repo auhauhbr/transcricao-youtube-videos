@@ -30,6 +30,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    workspaceUrl: {
+        type: String,
+        default: null,
+    },
 });
 
 const copyMessage = ref('');
@@ -215,6 +219,9 @@ const copyTranscript = async () => {
                         class="ui-button-secondary"
                     >
                         Abrir na biblioteca
+                    </Link>
+                    <Link v-if="workspaceUrl" :href="workspaceUrl" class="ui-button-primary">
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar no Workspace
                     </Link>
                 </div>
                 <div class="mt-5 min-w-0 max-w-5xl">

@@ -69,7 +69,9 @@ class LibraryController extends Controller
      *   sourceLabel: string,
      *   addedAt: string,
      *   showUrl: string,
+     *   workspaceUrl: string,
      *   destroyUrl: string,
+     *   hasDocument: bool,
      *   folder: array{publicId: string, name: string}|null,
      *   tags: array<int, array{publicId: string, name: string}>
      * }
@@ -91,7 +93,9 @@ class LibraryController extends Controller
             'sourceLabel' => $transcript->source->publicLabel(),
             'addedAt' => $item->created_at->toIso8601String(),
             'showUrl' => route('library.show', $item->public_id, absolute: false),
+            'workspaceUrl' => route('library.workspace', $item->public_id, absolute: false),
             'destroyUrl' => route('library.destroy', $item->public_id, absolute: false),
+            'hasDocument' => (bool) $item->document_exists,
             'folder' => $item->folder === null ? null : [
                 'publicId' => $item->folder->public_id,
                 'name' => $item->folder->name,

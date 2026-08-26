@@ -8,6 +8,7 @@ defineProps({
     video: { type: Object, required: true },
     transcript: { type: Object, required: true },
     downloadUrl: { type: String, required: true },
+    workspaceUrl: { type: String, required: true },
     backUrl: { type: String, required: true },
 });
 </script>
@@ -22,6 +23,7 @@ defineProps({
             :video="video"
             :transcript="transcript"
             :download-url="downloadUrl"
+            :workspace-url="workspaceUrl"
             :back-url="backUrl"
             back-label="Voltar à biblioteca"
         />

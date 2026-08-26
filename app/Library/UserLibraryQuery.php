@@ -22,6 +22,7 @@ final class UserLibraryQuery
     {
         $query = UserTranscript::query()
             ->where('user_transcripts.user_id', $user->getKey())
+            ->withExists('document')
             ->with([
                 'folder:id,public_id,name',
                 'tags:id,public_id,name',

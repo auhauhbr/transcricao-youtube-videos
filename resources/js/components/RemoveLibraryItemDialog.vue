@@ -74,7 +74,7 @@ defineExpose({ open });
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-destructive">Remover item</p>
             <h2 id="remove-library-title" class="mt-2 text-xl font-semibold tracking-tight">Remover da biblioteca?</h2>
             <p id="remove-library-description" class="mt-4 text-sm leading-6 text-muted-foreground">
-                A transcrição será removida da sua biblioteca. O conteúdo original não será apagado.
+                Remover esta transcrição também excluirá o documento editável privado associado, se existir. A transcrição original compartilhada não será apagada.
             </p>
 
             <div class="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

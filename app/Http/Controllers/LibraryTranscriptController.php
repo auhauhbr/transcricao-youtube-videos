@@ -24,6 +24,7 @@ class LibraryTranscriptController extends Controller
         return Inertia::render('Library/Show', [
             ...$presenter->present($item->transcript),
             'downloadUrl' => route('library.download', $item->public_id, absolute: false),
+            'workspaceUrl' => route('library.workspace', $item->public_id, absolute: false),
             'backUrl' => route('library.index', absolute: false),
         ]);
     }
