@@ -70,9 +70,9 @@ const quotaMessage = () => {
     <Head title="Transforme vídeos em texto" />
 
     <PublicLayout :app-name="appName">
-        <section id="inicio" class="border-b border-border bg-background">
-            <div class="mx-auto max-w-7xl px-5 pb-12 pt-14 sm:px-8 sm:pb-16 sm:pt-20 lg:px-10 lg:pb-20 lg:pt-24">
-                <div class="max-w-5xl">
+        <section id="inicio" class="bg-background">
+            <div class="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-20 lg:px-10 lg:py-24">
+                <div class="max-w-3xl">
                     <p class="ui-eyebrow mb-4 flex items-center gap-2.5">
                         <i class="bi bi-file-text" aria-hidden="true"></i> Conteúdo primeiro
                     </p>
@@ -84,7 +84,7 @@ const quotaMessage = () => {
                     </p>
                 </div>
 
-                <form class="mt-9 max-w-5xl" :aria-busy="form.processing" @submit.prevent="submit">
+                <form class="ui-panel mt-9 max-w-3xl p-4 sm:p-5" :aria-busy="form.processing" @submit.prevent="submit">
                     <label for="video-url" class="mb-3 block text-sm font-semibold text-foreground">URL do vídeo</label>
                     <div class="flex flex-col gap-3 sm:flex-row">
                         <input
@@ -122,77 +122,12 @@ const quotaMessage = () => {
                     @close="form.clearErrors('anonymous_quota')"
                 />
 
-                <ul class="mt-7 flex max-w-5xl flex-wrap gap-x-7 gap-y-3" aria-label="Benefícios planejados">
+                <ul class="mt-7 flex max-w-3xl flex-wrap gap-x-7 gap-y-3" aria-label="Benefícios">
                     <li v-for="benefit in benefits" :key="benefit" class="flex items-center gap-2 text-sm text-muted-foreground">
                         <i class="bi bi-check2 text-accent" aria-hidden="true"></i>
                         {{ benefit }}
                     </li>
                 </ul>
-            </div>
-        </section>
-
-        <section class="border-b border-border bg-muted" aria-labelledby="preview-title">
-            <div class="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
-                <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Prévia conceitual</p>
-                        <h2 id="preview-title" class="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                            Texto organizado para leitura.
-                        </h2>
-                    </div>
-                    <p class="max-w-md text-sm leading-6 text-muted-foreground">Uma representação estática da experiência de transcrição planejada.</p>
-                </div>
-
-                <div class="ui-panel">
-                    <div class="flex h-11 items-center justify-between border-b border-border px-4 sm:px-5">
-                        <div class="flex items-center gap-1.5" aria-hidden="true">
-                            <span class="size-2 border border-border bg-muted"></span>
-                            <span class="size-2 border border-border bg-muted"></span>
-                            <span class="size-2 border border-border bg-accent"></span>
-                        </div>
-                        <span class="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Exemplo de interface</span>
-                    </div>
-
-                    <div class="grid md:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr]">
-                        <aside class="hidden border-r border-border p-6 md:block" aria-label="Capítulos do exemplo">
-                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Capítulos</p>
-                            <ol class="mt-5 space-y-1 text-sm">
-                                <li class="border-l-2 border-accent bg-muted px-3 py-2.5 font-medium text-foreground">00:00 Introdução</li>
-                                <li class="border-l-2 border-transparent px-3 py-2.5 text-muted-foreground">01:22 Preparação</li>
-                                <li class="border-l-2 border-transparent px-3 py-2.5 text-muted-foreground">05:48 Organização</li>
-                            </ol>
-                        </aside>
-
-                        <article class="p-6 sm:p-8 lg:p-10">
-                            <header class="border-b border-border pb-7">
-                                <p class="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Vídeo demonstrativo</p>
-                                <h3 class="mt-3 text-2xl font-semibold tracking-tight text-foreground">Como organizar uma pesquisa em vídeo</h3>
-                                <p class="mt-2 text-sm text-muted-foreground">Canal de exemplo · 24:20</p>
-                            </header>
-
-                            <div class="divide-y divide-border">
-                                <section class="grid gap-3 py-7 sm:grid-cols-[72px_1fr] sm:gap-6">
-                                    <time class="font-mono text-xs font-semibold text-accent">00:00</time>
-                                    <div>
-                                        <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">Introdução</h4>
-                                        <p class="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                                            Neste trecho demonstrativo, o conteúdo aparece em blocos legíveis e conectado ao momento correspondente do vídeo.
-                                        </p>
-                                    </div>
-                                </section>
-                                <section class="grid gap-3 py-7 sm:grid-cols-[72px_1fr] sm:gap-6">
-                                    <time class="font-mono text-xs font-semibold text-accent">01:22</time>
-                                    <div>
-                                        <h4 class="text-sm font-semibold uppercase tracking-[0.12em] text-foreground">Preparação</h4>
-                                        <p class="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                                            Timestamps e capítulos ajudam a percorrer textos longos sem perder a relação com a fonte original.
-                                        </p>
-                                    </div>
-                                </section>
-                            </div>
-                        </article>
-                    </div>
-                </div>
             </div>
         </section>
     </PublicLayout>

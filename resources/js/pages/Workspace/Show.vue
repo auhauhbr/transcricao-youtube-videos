@@ -269,7 +269,7 @@ onBeforeUnmount(() => {
     <PublicLayout :app-name="appName">
         <div class="flex-1 bg-background">
             <div class="mx-auto max-w-[1500px] px-4 py-6 sm:px-8 lg:px-10">
-                <header class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                <header class="flex flex-wrap items-center justify-between gap-3 pb-4">
                     <div><Link :href="workspace.urls.library" class="ui-button-ghost px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Biblioteca</Link><p class="ui-eyebrow mt-2">Workspace pessoal</p><h1 class="mt-1 text-xl font-semibold sm:text-2xl">{{ title }}</h1></div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button type="button" class="ui-button-secondary" aria-label="Exportar documento editado" @click="exportOpen = true"><i class="bi bi-download" aria-hidden="true"></i> Exportar</button>

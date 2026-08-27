@@ -10,6 +10,7 @@ const props = defineProps({
     flash: { type: Object, required: true },
     profileUrl: { type: String, required: true },
     passwordUrl: { type: String, required: true },
+    hasPassword: { type: Boolean, required: true },
 });
 
 const profileForm = useForm({
@@ -44,7 +45,7 @@ const updatePassword = () =>
 
     <PublicLayout :app-name="appName">
         <FlashToast :flash-id="flash.id" :message="flashMessage" />
-        <section class="flex-1 border-b border-border bg-background">
+        <section class="flex-1 bg-background">
             <div class="mx-auto max-w-4xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10">
                 <a href="/" class="ui-button-ghost px-0"><i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar</a>
                 <p class="ui-eyebrow mt-6">Configurações</p>
@@ -70,7 +71,7 @@ const updatePassword = () =>
                         </form>
                     </section>
 
-                    <section class="ui-panel p-5 sm:p-6" aria-labelledby="password-title">
+                    <section v-if="hasPassword" class="ui-panel p-5 sm:p-6" aria-labelledby="password-title">
                         <h2 id="password-title" class="text-xl font-semibold text-foreground">Alterar senha</h2>
                         <form class="mt-6 space-y-5" @submit.prevent="updatePassword">
                             <div>
@@ -91,6 +92,10 @@ const updatePassword = () =>
                                 <i class="bi bi-shield-lock" aria-hidden="true"></i> Atualizar senha
                             </button>
                         </form>
+                    </section>
+                    <section v-else class="ui-panel p-5 sm:p-6" aria-labelledby="external-login-title">
+                        <h2 id="external-login-title" class="text-xl font-semibold text-foreground">Login externo</h2>
+                        <p class="mt-3 text-sm leading-6 text-muted-foreground">Esta conta utiliza login externo.</p>
                     </section>
                 </div>
             </div>

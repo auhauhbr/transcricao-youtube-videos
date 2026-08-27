@@ -46,22 +46,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <header class="sticky top-0 z-40 border-b border-border bg-header">
+    <header class="sticky top-0 z-40 bg-header">
         <div class="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:px-8 lg:px-10">
             <AppWordmark :app-name="appName" />
             <div class="flex items-center gap-2 sm:gap-3">
                 <template v-if="user">
+                    <ThemeToggle />
                     <nav class="hidden items-center gap-1 sm:flex" aria-label="Navegação da conta">
                         <Link href="/library" class="ui-button-ghost">
                             <i class="bi bi-collection" aria-hidden="true"></i>
                             Biblioteca
-                        </Link>
-                        <Link
-                            href="/account"
-                            class="ui-button-secondary"
-                        >
-                            <i class="bi bi-person" aria-hidden="true"></i>
-                            <span class="max-w-36 truncate">{{ user.name }}</span>
                         </Link>
                         <Link
                             href="/logout"
@@ -71,6 +65,10 @@ onBeforeUnmount(() => {
                         >
                             <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                             Sair
+                        </Link>
+                        <Link href="/account" class="ui-button-secondary">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                            Minha conta
                         </Link>
                     </nav>
                     <div ref="mobileMenu" class="relative sm:hidden">
@@ -114,7 +112,7 @@ onBeforeUnmount(() => {
                         Criar conta
                     </Link>
                 </template>
-                <ThemeToggle />
+                <ThemeToggle v-if="!user" />
             </div>
         </div>
     </header>
