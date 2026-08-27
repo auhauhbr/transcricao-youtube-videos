@@ -1,3 +1,15 @@
+FROM node:22-alpine AS frontend
+
+WORKDIR /var/www/html
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY vite.config.js ./
+COPY resources resources
+COPY public public
+RUN npm run build
+
 FROM php:8.5-fpm-alpine AS base
 
 RUN apk add --no-cache libpq-dev libzip-dev libpng-dev \
@@ -29,6 +41,31 @@ FROM base AS app
 
 CMD ["php-fpm"]
 
+FROM base AS web
+
+RUN apk add --no-cache nginx supervisor \
+    && mkdir -p /run/nginx \
+    && rm -f /etc/nginx/http.d/default.conf
+
+COPY docker/nginx/northflank.conf /etc/nginx/http.d/default.conf
+COPY docker/php/supervisord.conf /etc/supervisord.conf
+COPY --from=frontend /var/www/html/public/build public/build
+
+RUN printf '%s\n' \
+        '[global]' \
+        'error_log = /proc/self/fd/2' \
+        '' \
+        '[www]' \
+        'access.log = /proc/self/fd/2' \
+        'catch_workers_output = yes' \
+        'php_admin_flag[log_errors] = on' \
+        'php_admin_value[error_log] = /proc/self/fd/2' \
+        > /usr/local/etc/php-fpm.d/zz-production-logging.conf
+
+EXPOSE 8080
+
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+
 FROM base AS worker
 
 ARG YT_DLP_VERSION=2026.08.19
@@ -42,3 +79,5 @@ RUN apk add --no-cache nodejs python3 \
     && echo "${YT_DLP_SHA256}  /usr/local/bin/yt-dlp" | sha256sum -cs \
     && chmod 0755 /usr/local/bin/yt-dlp \
     && apk del .yt-dlp-download
+
+CMD ["php", "artisan", "queue:work", "redis", "--queue=transcripts,default", "--sleep=3", "--tries=3", "--timeout=180"]
