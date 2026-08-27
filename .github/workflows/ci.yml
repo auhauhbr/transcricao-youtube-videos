@@ -27,7 +27,6 @@ jobs:
           extensions: dom, gd, mbstring, xml, zip, sqlite, pdo_sqlite, pdo_pgsql
           tools: composer:v2
           coverage: none
-          cache: composer
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
       - run: composer lint
