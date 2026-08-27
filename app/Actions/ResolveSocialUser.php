@@ -20,19 +20,25 @@ final class ResolveSocialUser
                 ->first();
 
             if ($account !== null) {
-                return $account->user;
+                $user = $account->user;
+
+                if ($user->email_verified_at === null) {
+                    $user->forceFill(['email_verified_at' => now()])->save();
+                }
+
+                return $user;
             }
 
             if (User::query()->where('email', $email)->exists()) {
                 throw new SocialLoginException('Não foi possível concluir o login externo com esta conta. Entre pelo método usado anteriormente.');
             }
 
-            $user = User::query()->create([
+            $user = new User([
                 'name' => Str::limit(trim($name ?? '') ?: 'Usuário', 255, ''),
                 'email' => $email,
-                'email_verified_at' => now(),
                 'password' => null,
             ]);
+            $user->forceFill(['email_verified_at' => now()])->save();
 
             SocialAccount::query()->create([
                 'user_id' => $user->getKey(),

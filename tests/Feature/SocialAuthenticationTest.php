@@ -43,22 +43,39 @@ test('google callback creates a passwordless user and social account', function 
     $this->get(route('auth.google.callback'))->assertRedirect(route('library.index'));
 
     $user = User::query()->sole();
-    expect($user->email)->toBe('google@example.com')->and($user->password)->toBeNull();
+    expect($user->email)->toBe('google@example.com')->and($user->password)->toBeNull()->and($user->email_verified_at)->not->toBeNull();
     expect(SocialAccount::query()->sole()->only(['provider', 'provider_user_id', 'user_id']))->toBe([
         'provider' => 'google', 'provider_user_id' => 'google-1', 'user_id' => $user->getKey(),
     ]);
     $this->assertAuthenticatedAs($user);
+    $this->get(route('library.index'))->assertOk();
 });
 
-test('existing google and microsoft identities authenticate their linked users', function (string $provider) {
-    $user = User::factory()->create();
+test('existing google and microsoft identities authenticate their linked users and repair legacy verification', function (string $provider) {
+    $user = User::factory()->unverified()->create();
     SocialAccount::query()->create(['user_id' => $user->getKey(), 'provider' => $provider, 'provider_user_id' => "{$provider}-1"]);
     fakeSocialiteCallback($provider, socialiteUser("{$provider}-1", 'other@example.com'));
 
     $this->get(route("auth.{$provider}.callback"))->assertRedirect(route('library.index'));
     $this->assertAuthenticatedAs($user);
-    expect(User::query()->count())->toBe(1)->and(SocialAccount::query()->count())->toBe(1);
+    expect($user->refresh()->email_verified_at)->not->toBeNull()
+        ->and(User::query()->count())->toBe(1)
+        ->and(SocialAccount::query()->count())->toBe(1);
 })->with(['google', 'microsoft']);
+
+test('an already verified google identity remains verified and accesses private routes', function () {
+    $user = User::factory()->create();
+    SocialAccount::query()->create(['user_id' => $user->getKey(), 'provider' => 'google', 'provider_user_id' => 'google-verified']);
+    $verifiedAt = $user->email_verified_at;
+    fakeSocialiteCallback('google', socialiteUser('google-verified', 'other@example.com'));
+
+    $this->get(route('auth.google.callback'))->assertRedirect(route('library.index'));
+
+    expect($user->refresh()->email_verified_at?->equalTo($verifiedAt))->toBeTrue()
+        ->and(User::query()->count())->toBe(1)
+        ->and(SocialAccount::query()->count())->toBe(1);
+    $this->get(route('library.index'))->assertOk();
+});
 
 test('microsoft callback creates an account', function () {
     fakeSocialiteCallback('microsoft', socialiteUser('microsoft-1', 'microsoft@example.com'));

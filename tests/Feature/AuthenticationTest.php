@@ -269,6 +269,8 @@ test('authenticated shared props expose only the header user name', function () 
 });
 
 test('account is protected and allows profile and password updates', function () {
+    Notification::fake();
+
     $user = User::factory()->create([
         'email' => 'before@example.com',
         'password' => 'old-password',
@@ -288,6 +290,7 @@ test('account is protected and allows profile and password updates', function ()
         'name' => 'Nome Atualizado',
         'email' => 'AFTER@EXAMPLE.COM',
     ])->assertRedirect(route('verification.notice'))->assertSessionHas('status', 'verification-link-sent');
+    Notification::assertSentTo($user, VerifyEmail::class);
 
     $this->put(route('account.password'), [
         'current_password' => 'old-password',
@@ -323,6 +326,34 @@ test('traditional registration requires email verification before private librar
     $this->actingAs($user)->get($verificationUrl)->assertRedirect(route('library.index'));
 
     expect($user->refresh()->hasVerifiedEmail())->toBeTrue();
+    $this->actingAs($user)->get(route('library.index'))->assertOk();
+});
+
+test('unverified users can resend verification and altered links cannot verify them', function () {
+    Notification::fake();
+    $user = User::factory()->unverified()->create();
+
+    $this->actingAs($user)->post(route('verification.send'))
+        ->assertRedirect()
+        ->assertSessionHas('status', 'verification-link-sent');
+    Notification::assertSentTo($user, VerifyEmail::class);
+
+    $invalidUrl = URL::temporarySignedRoute('verification.verify', now()->addMinutes(10), [
+        'id' => $user->getKey(),
+        'hash' => sha1('altered@example.com'),
+    ]);
+    $this->actingAs($user)->get($invalidUrl)->assertForbidden();
+
+    expect($user->refresh()->email_verified_at)->toBeNull();
+});
+
+test('already verified users do not receive another verification notification', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('verification.send'))->assertRedirect(route('library.index'));
+
+    Notification::assertNothingSent();
     $this->actingAs($user)->get(route('library.index'))->assertOk();
 });
 
