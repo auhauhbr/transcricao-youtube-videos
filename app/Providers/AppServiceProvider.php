@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use LogicException;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Microsoft\MicrosoftExtendSocialite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -59,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app['events']->listen(SocialiteWasCalled::class, MicrosoftExtendSocialite::class);
+
         RateLimiter::for('transcript-extractions', fn (Request $request): array => [
             Limit::perMinute(5)->by('minute:'.$request->ip()),
             Limit::perHour(20)->by('hour:'.$request->ip()),

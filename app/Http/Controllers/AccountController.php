@@ -16,6 +16,7 @@ class AccountController extends Controller
         return Inertia::render('Account/Show', [
             'profileUrl' => route('account.profile', absolute: false),
             'passwordUrl' => route('account.password', absolute: false),
+            'hasPassword' => auth()->user()?->password !== null,
         ]);
     }
 

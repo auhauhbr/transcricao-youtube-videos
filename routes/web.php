@@ -12,6 +12,7 @@ use App\Http\Controllers\LibraryFolderController;
 use App\Http\Controllers\LibraryTagController;
 use App\Http\Controllers\LibraryTranscriptController;
 use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\SocialAuthenticationController;
 use App\Http\Controllers\UserDocumentDownloadController;
 use App\Http\Controllers\UserDocumentRevisionController;
 use App\Http\Controllers\UserDocumentWorkspaceController;
@@ -32,6 +33,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login');
+    Route::get('/auth/google/redirect', [SocialAuthenticationController::class, 'redirectGoogle'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [SocialAuthenticationController::class, 'callbackGoogle'])->name('auth.google.callback');
+    Route::get('/auth/microsoft/redirect', [SocialAuthenticationController::class, 'redirectMicrosoft'])->name('auth.microsoft.redirect');
+    Route::get('/auth/microsoft/callback', [SocialAuthenticationController::class, 'callbackMicrosoft'])->name('auth.microsoft.callback');
 });
 
 Route::middleware('auth')->group(function () {

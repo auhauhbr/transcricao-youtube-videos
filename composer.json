@@ -10,9 +10,11 @@
         "dompdf/dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^3.3",
         "laravel/framework": "^13.17",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
         "phpoffice/phpword": "^1.4",
-        "predis/predis": "^3.6"
+        "predis/predis": "^3.6",
+        "socialiteproviders/microsoft": "^4.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
