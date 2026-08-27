@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ClaimGuestExtractions;
+use App\Auth\SocialProviderAvailability;
 use App\Guest\GuestIdentity;
 use App\Http\Middleware\EnsureGuestIdentity;
 use App\Http\Requests\RegisterRequest;
@@ -14,11 +15,15 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    public function create(): Response
+    public function create(SocialProviderAvailability $socialProviders): Response
     {
         return Inertia::render('Auth/Register', [
             'registerUrl' => route('register', absolute: false),
             'loginUrl' => route('login', absolute: false),
+            'socialProviders' => [
+                'google' => $socialProviders->isConfigured('google'),
+                'microsoft' => $socialProviders->isConfigured('microsoft'),
+            ],
         ]);
     }
 

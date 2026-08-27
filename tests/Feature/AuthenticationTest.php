@@ -329,6 +329,19 @@ test('traditional registration requires email verification before private librar
     $this->actingAs($user)->get(route('library.index'))->assertOk();
 });
 
+test('email verification notification is localized and keeps a signed verification URL', function () {
+    $user = User::factory()->unverified()->create();
+    $message = (new VerifyEmail)->toMail($user);
+
+    expect($message->subject)->toBe('Confirme seu endereço de e-mail')
+        ->and($message->greeting)->toBe('Olá!')
+        ->and($message->actionText)->toBe('Verificar endereço de e-mail')
+        ->and($message->actionUrl)->toContain('signature=')
+        ->and($message->introLines)->toBe(['Clique no botão abaixo para confirmar seu endereço de e-mail no Transcrev.'])
+        ->and($message->outroLines)->toBe(['Se você não criou uma conta no Transcrev, nenhuma ação adicional é necessária.'])
+        ->and($message->salutation)->toBe("Atenciosamente,\nTranscrev");
+});
+
 test('unverified users can resend verification and altered links cannot verify them', function () {
     Notification::fake();
     $user = User::factory()->unverified()->create();

@@ -10,8 +10,10 @@ use App\Transcript\YtDlp\YtDlpErrorClassifier;
 use App\Transcript\YtDlp\YtDlpGateway;
 use App\Transcript\YtDlp\YtDlpProcessRunner;
 use App\Transcript\YtDlp\YtDlpProcessRunnerContract;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -62,6 +64,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app['events']->listen(SocialiteWasCalled::class, MicrosoftExtendSocialite::class);
+
+        VerifyEmail::toMailUsing(static function (object $notifiable, string $url): MailMessage {
+            return (new MailMessage)
+                ->subject('Confirme seu endereço de e-mail')
+                ->greeting('Olá!')
+                ->line('Clique no botão abaixo para confirmar seu endereço de e-mail no Transcrev.')
+                ->action('Verificar endereço de e-mail', $url)
+                ->line('Se você não criou uma conta no Transcrev, nenhuma ação adicional é necessária.')
+                ->salutation("Atenciosamente,\nTranscrev");
+        });
 
         RateLimiter::for('transcript-extractions', fn (Request $request): array => [
             Limit::perMinute(5)->by('minute:'.$request->ip()),

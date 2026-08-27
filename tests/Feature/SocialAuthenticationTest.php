@@ -30,11 +30,27 @@ function fakeSocialiteCallback(string $provider, SocialiteUser $user): void
 }
 
 test('google redirect uses the configured socialite driver', function () {
+    config(['services.google' => [
+        'client_id' => 'google-client-id',
+        'client_secret' => 'google-client-secret',
+        'redirect' => 'http://localhost/auth/google/callback',
+    ]]);
     $driver = Mockery::mock();
     $driver->shouldReceive('redirect')->once()->andReturn(new RedirectResponse('https://accounts.google.test'));
     Socialite::shouldReceive('driver')->once()->with('google')->andReturn($driver);
 
     $this->get(route('auth.google.redirect'))->assertRedirect('https://accounts.google.test');
+});
+
+test('unconfigured social providers are hidden from auth pages and their redirect is rejected safely', function () {
+    config([
+        'services.google' => ['client_id' => null, 'client_secret' => null, 'redirect' => null],
+        'services.microsoft' => ['client_id' => null, 'client_secret' => null, 'redirect' => null, 'tenant' => 'common'],
+    ]);
+
+    $this->get(route('login'))->assertInertia(fn ($page) => $page
+        ->where('socialProviders', ['google' => false, 'microsoft' => false]));
+    $this->get(route('auth.microsoft.redirect'))->assertRedirect(route('login'))->assertSessionHasErrors('social');
 });
 
 test('google callback creates a passwordless user and social account', function () {

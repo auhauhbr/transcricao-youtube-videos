@@ -6,6 +6,7 @@ defineProps({
     appName: { type: String, required: true },
     loginUrl: { type: String, required: true },
     registerUrl: { type: String, required: true },
+    socialProviders: { type: Object, required: true },
 });
 
 const form = useForm({
@@ -34,12 +35,13 @@ const submit = (loginUrl) => {
                     <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground">Entrar</h1>
                     <p class="mt-3 text-sm leading-6 text-muted-foreground">Acesse sua biblioteca e continue trabalhando nas suas transcrições.</p>
 
-                    <div class="mt-8 grid gap-2">
-                        <a href="/auth/google/redirect" class="ui-button-secondary w-full"><i class="bi bi-google" aria-hidden="true"></i> Continuar com Google</a>
-                        <a href="/auth/microsoft/redirect" class="ui-button-secondary w-full"><i class="bi bi-microsoft" aria-hidden="true"></i> Continuar com Microsoft</a>
+                    <div v-if="socialProviders.google || socialProviders.microsoft" class="mt-8 grid gap-2">
+                        <a v-if="socialProviders.google" href="/auth/google/redirect" class="ui-button-secondary w-full"><i class="bi bi-google" aria-hidden="true"></i> Continuar com Google</a>
+                        <a v-if="socialProviders.microsoft" href="/auth/microsoft/redirect" class="ui-button-secondary w-full"><i class="bi bi-microsoft" aria-hidden="true"></i> Continuar com Microsoft</a>
                     </div>
                     <p v-if="form.errors.social" class="mt-3 text-sm text-destructive" role="alert">{{ form.errors.social }}</p>
-                    <p class="my-6 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">ou continue com email</p>
+                    <p v-if="socialProviders.google || socialProviders.microsoft" class="my-6 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">ou continue com email</p>
+                    <p v-else class="mt-8 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Acesse com email</p>
                     <form class="space-y-5" :aria-busy="form.processing" @submit.prevent="submit(loginUrl)">
                         <div>
                             <label for="login-email" class="text-sm font-semibold text-foreground">Email</label>

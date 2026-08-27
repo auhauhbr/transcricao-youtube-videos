@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\ClaimGuestExtractions;
 use App\Actions\ResolveSocialUser;
+use App\Auth\SocialProviderAvailability;
 use App\Exceptions\SocialLoginException;
 use App\Guest\GuestIdentity;
 use App\Http\Middleware\EnsureGuestIdentity;
@@ -15,13 +16,21 @@ use Throwable;
 
 class SocialAuthenticationController extends Controller
 {
-    public function redirectGoogle(): RedirectResponse
+    public function redirectGoogle(SocialProviderAvailability $socialProviders): RedirectResponse
     {
+        if (! $socialProviders->isConfigured('google')) {
+            return redirect()->route('login')->withErrors(['social' => 'O login externo não está disponível no momento.']);
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
-    public function redirectMicrosoft(): RedirectResponse
+    public function redirectMicrosoft(SocialProviderAvailability $socialProviders): RedirectResponse
     {
+        if (! $socialProviders->isConfigured('microsoft')) {
+            return redirect()->route('login')->withErrors(['social' => 'O login externo não está disponível no momento.']);
+        }
+
         return Socialite::driver('microsoft')->redirect();
     }
 
