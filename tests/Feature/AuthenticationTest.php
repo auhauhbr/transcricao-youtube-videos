@@ -11,10 +11,13 @@ use App\Models\User;
 use App\Models\UserTranscript;
 use App\Models\Video;
 use App\Transcript\Providers\FakeTranscriptProvider;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -247,7 +250,7 @@ test('logout from a browser without guest usage does not create a quota ledger',
     expect(GuestUsage::query()->count())->toBe(0);
 });
 
-test('authenticated shared props omit anonymous quota and expose only public user fields', function () {
+test('authenticated shared props expose only the header user name', function () {
     $user = User::factory()->create([
         'name' => 'Conta Segura',
         'email' => 'conta@example.com',
@@ -255,11 +258,11 @@ test('authenticated shared props omit anonymous quota and expose only public use
 
     $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
         ->where('auth.user', [
-            'id' => $user->getKey(),
             'name' => 'Conta Segura',
-            'email' => 'conta@example.com',
         ])
         ->where('anonymousQuota', null)
+        ->missing('auth.user.id')
+        ->missing('auth.user.email')
         ->missing('auth.user.password')
         ->missing('auth.user.remember_token')
     );
@@ -275,12 +278,16 @@ test('account is protected and allows profile and password updates', function ()
 
     $this->actingAs($user)
         ->get(route('account.show'))
-        ->assertInertia(fn (Assert $page) => $page->component('Account/Show'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Account/Show')
+            ->where('profile', ['name' => $user->name, 'email' => 'before@example.com'])
+            ->missing('auth.user.id')
+            ->missing('auth.user.email'));
 
     $this->patch(route('account.profile'), [
         'name' => 'Nome Atualizado',
         'email' => 'AFTER@EXAMPLE.COM',
-    ])->assertRedirect()->assertSessionHas('status', 'profile-updated');
+    ])->assertRedirect(route('verification.notice'))->assertSessionHas('status', 'verification-link-sent');
 
     $this->put(route('account.password'), [
         'current_password' => 'old-password',
@@ -290,5 +297,43 @@ test('account is protected and allows profile and password updates', function ()
 
     expect($user->refresh()->name)->toBe('Nome Atualizado')
         ->and($user->email)->toBe('after@example.com')
+        ->and($user->email_verified_at)->toBeNull()
         ->and(Hash::check('new-password', $user->password))->toBeTrue();
+});
+
+test('traditional registration requires email verification before private library access', function () {
+    Notification::fake();
+
+    $this->post(route('register'), [
+        'name' => 'Email Pendente',
+        'email' => 'pending@example.com',
+        'password' => 'password-seguro',
+        'password_confirmation' => 'password-seguro',
+    ])->assertRedirect(route('home'));
+
+    $user = User::query()->sole();
+    expect($user->email_verified_at)->toBeNull();
+    Notification::assertSentTo($user, VerifyEmail::class);
+
+    $this->actingAs($user)->get(route('library.index'))->assertRedirect(route('verification.notice'));
+    $verificationUrl = URL::temporarySignedRoute('verification.verify', now()->addMinutes(10), [
+        'id' => $user->getKey(),
+        'hash' => sha1($user->email),
+    ]);
+    $this->actingAs($user)->get($verificationUrl)->assertRedirect(route('library.index'));
+
+    expect($user->refresh()->hasVerifiedEmail())->toBeTrue();
+    $this->actingAs($user)->get(route('library.index'))->assertOk();
+});
+
+test('registration does not disclose whether an email is already registered', function () {
+    User::factory()->create(['email' => 'existing@example.com']);
+
+    $this->from(route('register'))->post(route('register'), [
+        'name' => 'Tentativa',
+        'email' => 'existing@example.com',
+        'password' => 'password-seguro',
+        'password_confirmation' => 'password-seguro',
+    ])->assertRedirect(route('register'))
+        ->assertSessionHasErrors(['email' => 'Não foi possível concluir o cadastro com os dados informados.']);
 });
