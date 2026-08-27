@@ -28,14 +28,19 @@ const submit = (registerUrl) => {
     </Head>
 
     <PublicLayout :app-name="appName">
-        <section class="flex flex-1 items-center border-b border-border bg-background">
+        <section class="flex flex-1 items-center bg-background">
             <div class="mx-auto w-full max-w-md px-5 py-10 sm:px-8 sm:py-14">
                 <div class="ui-panel p-6 sm:p-8">
                     <p class="ui-eyebrow">Acesso contínuo</p>
                     <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground">Criar conta</h1>
                     <p class="mt-3 text-sm leading-6 text-muted-foreground">Suas transcrições deste navegador serão associadas à conta.</p>
 
-                    <form class="mt-8 space-y-5" :aria-busy="form.processing" @submit.prevent="submit(registerUrl)">
+                    <div class="mt-8 grid gap-2">
+                        <a href="/auth/google/redirect" class="ui-button-secondary w-full"><i class="bi bi-google" aria-hidden="true"></i> Continuar com Google</a>
+                        <a href="/auth/microsoft/redirect" class="ui-button-secondary w-full"><i class="bi bi-microsoft" aria-hidden="true"></i> Continuar com Microsoft</a>
+                    </div>
+                    <p class="my-6 text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">ou continue com email</p>
+                    <form class="space-y-5" :aria-busy="form.processing" @submit.prevent="submit(registerUrl)">
                         <div>
                             <label for="register-name" class="text-sm font-semibold text-foreground">Nome</label>
                             <input
