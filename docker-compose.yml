@@ -27,6 +27,11 @@ services:
             redis:
                 condition: service_healthy
 
+    mailpit:
+        image: axllent/mailpit:v1.31.0
+        ports:
+            - "127.0.0.1:8025:8025"
+
     nginx:
         image: nginx:1.29-alpine
         ports:
@@ -42,7 +47,6 @@ services:
             context: .
             dockerfile: docker/php/Dockerfile
             target: worker
-        user: www-data
         command: php artisan queue:work redis --queue=transcripts,default --sleep=3 --tries=3 --timeout=180
         env_file: .env
         environment:

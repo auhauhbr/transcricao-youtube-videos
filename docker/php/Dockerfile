@@ -12,11 +12,13 @@ RUN npm run build
 
 FROM php:8.5-fpm-alpine AS base
 
-RUN apk add --no-cache libpq-dev libzip-dev libpng-dev \
+RUN apk add --no-cache libpq-dev libzip-dev libpng-dev su-exec \
     && docker-php-ext-install pdo_pgsql pcntl gd zip \
     && php -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY docker/php/entrypoint.sh /usr/local/bin/transcrev-entrypoint
+RUN chmod 0755 /usr/local/bin/transcrev-entrypoint
 
 WORKDIR /var/www/html
 
@@ -36,6 +38,8 @@ COPY artisan ./
 COPY phpunit.xml phpstan.neon ./
 RUN composer dump-autoload --optimize \
     && chown -R www-data:www-data storage bootstrap/cache
+
+ENTRYPOINT ["/usr/local/bin/transcrev-entrypoint"]
 
 FROM base AS app
 
