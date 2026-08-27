@@ -28,6 +28,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        $user->sendEmailVerificationNotification();
 
         $guestIdentity = $request->attributes->get(EnsureGuestIdentity::ATTRIBUTE);
         $claimExtractions->handle(

@@ -6,7 +6,7 @@ import PublicLayout from '../../layouts/PublicLayout.vue';
 
 const props = defineProps({
     appName: { type: String, required: true },
-    auth: { type: Object, required: true },
+    profile: { type: Object, required: true },
     flash: { type: Object, required: true },
     profileUrl: { type: String, required: true },
     passwordUrl: { type: String, required: true },
@@ -14,8 +14,8 @@ const props = defineProps({
 });
 
 const profileForm = useForm({
-    name: props.auth.user.name,
-    email: props.auth.user.email,
+    name: props.profile.name,
+    email: props.profile.email,
 });
 const passwordForm = useForm({
     current_password: '',

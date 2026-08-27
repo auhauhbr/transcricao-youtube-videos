@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Controllers\DownloadLibraryTranscriptController;
 use App\Http\Controllers\DownloadTranscriptController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ExtractionController;
 use App\Http\Controllers\ExtractTranscriptController;
 use App\Http\Controllers\LibraryBulkController;
@@ -44,50 +45,59 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [AccountController::class, 'show'])->name('account.show');
     Route::patch('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
-    Route::get('/library', LibraryController::class)->name('library.index');
-    Route::post('/library/folders', [LibraryFolderController::class, 'store'])->name('library.folders.store');
-    Route::patch('/library/folders/{folder}', [LibraryFolderController::class, 'update'])->whereUlid('folder')->name('library.folders.update');
-    Route::delete('/library/folders/{folder}', [LibraryFolderController::class, 'destroy'])->whereUlid('folder')->name('library.folders.destroy');
-    Route::post('/library/tags', [LibraryTagController::class, 'store'])->name('library.tags.store');
-    Route::patch('/library/tags/{tag}', [LibraryTagController::class, 'update'])->whereUlid('tag')->name('library.tags.update');
-    Route::delete('/library/tags/{tag}', [LibraryTagController::class, 'destroy'])->whereUlid('tag')->name('library.tags.destroy');
-    Route::patch('/library/items/move', [LibraryBulkController::class, 'move'])->name('library.items.move');
-    Route::post('/library/items/tags', [LibraryBulkController::class, 'addTags'])->name('library.items.tags.add');
-    Route::delete('/library/items/tags', [LibraryBulkController::class, 'removeTags'])->name('library.items.tags.remove');
-    Route::delete('/library/items', [LibraryBulkController::class, 'destroy'])->name('library.items.destroy');
-    Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
-        ->whereUlid('userTranscript')
-        ->name('library.download');
-    Route::get('/library/{userTranscript}/workspace', [UserDocumentWorkspaceController::class, 'show'])
-        ->whereUlid('userTranscript')
-        ->name('library.workspace');
-    Route::put('/library/{userTranscript}/document', [UserDocumentWorkspaceController::class, 'update'])
-        ->whereUlid('userTranscript')
-        ->name('library.document.update');
-    Route::get('/library/{userTranscript}/document/download', UserDocumentDownloadController::class)
-        ->whereUlid('userTranscript')
-        ->name('library.document.download');
-    Route::get('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'index'])
-        ->whereUlid('userTranscript')
-        ->name('library.document.revisions.index');
-    Route::post('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'store'])
-        ->whereUlid('userTranscript')
-        ->name('library.document.revisions.store');
-    Route::get('/library/{userTranscript}/document/revisions/{revision}', [UserDocumentRevisionController::class, 'show'])
-        ->whereUlid('userTranscript')
-        ->whereUlid('revision')
-        ->name('library.document.revisions.show');
-    Route::post('/library/{userTranscript}/document/revisions/{revision}/restore', [UserDocumentRevisionController::class, 'restore'])
-        ->whereUlid('userTranscript')
-        ->whereUlid('revision')
-        ->name('library.document.revisions.restore');
-    Route::get('/library/{userTranscript}', [LibraryTranscriptController::class, 'show'])
-        ->whereUlid('userTranscript')
-        ->name('library.show');
-    Route::delete('/library/{userTranscript}', [LibraryTranscriptController::class, 'destroy'])
-        ->whereUlid('userTranscript')
-        ->name('library.destroy');
+    Route::middleware('verified')->group(function () {
+        Route::get('/library', LibraryController::class)->name('library.index');
+        Route::post('/library/folders', [LibraryFolderController::class, 'store'])->name('library.folders.store');
+        Route::patch('/library/folders/{folder}', [LibraryFolderController::class, 'update'])->whereUlid('folder')->name('library.folders.update');
+        Route::delete('/library/folders/{folder}', [LibraryFolderController::class, 'destroy'])->whereUlid('folder')->name('library.folders.destroy');
+        Route::post('/library/tags', [LibraryTagController::class, 'store'])->name('library.tags.store');
+        Route::patch('/library/tags/{tag}', [LibraryTagController::class, 'update'])->whereUlid('tag')->name('library.tags.update');
+        Route::delete('/library/tags/{tag}', [LibraryTagController::class, 'destroy'])->whereUlid('tag')->name('library.tags.destroy');
+        Route::patch('/library/items/move', [LibraryBulkController::class, 'move'])->name('library.items.move');
+        Route::post('/library/items/tags', [LibraryBulkController::class, 'addTags'])->name('library.items.tags.add');
+        Route::delete('/library/items/tags', [LibraryBulkController::class, 'removeTags'])->name('library.items.tags.remove');
+        Route::delete('/library/items', [LibraryBulkController::class, 'destroy'])->name('library.items.destroy');
+        Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
+            ->whereUlid('userTranscript')
+            ->name('library.download');
+        Route::get('/library/{userTranscript}/workspace', [UserDocumentWorkspaceController::class, 'show'])
+            ->whereUlid('userTranscript')
+            ->name('library.workspace');
+        Route::put('/library/{userTranscript}/document', [UserDocumentWorkspaceController::class, 'update'])
+            ->whereUlid('userTranscript')
+            ->name('library.document.update');
+        Route::get('/library/{userTranscript}/document/download', UserDocumentDownloadController::class)
+            ->whereUlid('userTranscript')
+            ->name('library.document.download');
+        Route::get('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'index'])
+            ->whereUlid('userTranscript')
+            ->name('library.document.revisions.index');
+        Route::post('/library/{userTranscript}/document/revisions', [UserDocumentRevisionController::class, 'store'])
+            ->whereUlid('userTranscript')
+            ->name('library.document.revisions.store');
+        Route::get('/library/{userTranscript}/document/revisions/{revision}', [UserDocumentRevisionController::class, 'show'])
+            ->whereUlid('userTranscript')
+            ->whereUlid('revision')
+            ->name('library.document.revisions.show');
+        Route::post('/library/{userTranscript}/document/revisions/{revision}/restore', [UserDocumentRevisionController::class, 'restore'])
+            ->whereUlid('userTranscript')
+            ->whereUlid('revision')
+            ->name('library.document.revisions.restore');
+        Route::get('/library/{userTranscript}', [LibraryTranscriptController::class, 'show'])
+            ->whereUlid('userTranscript')
+            ->name('library.show');
+        Route::delete('/library/{userTranscript}', [LibraryTranscriptController::class, 'destroy'])
+            ->whereUlid('userTranscript')
+            ->name('library.destroy');
+    });
 });
 
 Route::post('/transcripts/extract', ExtractTranscriptController::class)

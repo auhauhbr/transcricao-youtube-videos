@@ -30,4 +30,12 @@ class RegisterRequest extends FormRequest
             $this->merge(['email' => mb_strtolower(trim($this->input('email')))]);
         }
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'Não foi possível concluir o cadastro com os dados informados.',
+        ];
+    }
 }
