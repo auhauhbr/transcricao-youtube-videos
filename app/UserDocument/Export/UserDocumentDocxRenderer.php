@@ -2,14 +2,13 @@
 
 namespace App\UserDocument\Export;
 
-use App\Models\UserDocument;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Style\ListItem;
 
 final class UserDocumentDocxRenderer
 {
-    public function render(UserDocument $document): string
+    public function render(UserDocumentExportData $document): string
     {
         $word = new PhpWord;
         $word->getDocInfo()->setTitle($document->title);

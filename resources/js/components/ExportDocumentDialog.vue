@@ -18,7 +18,7 @@ onBeforeUnmount(() => { document.querySelector('#app')?.removeAttribute('inert')
         <div v-if="open" class="fixed inset-0 z-[75] flex items-center justify-center bg-black/45 p-4" @mousedown.self="close">
             <div ref="dialog" role="dialog" aria-modal="true" aria-labelledby="export-document-title" tabindex="-1" class="w-full max-w-md border border-border-strong bg-background p-5 shadow-[var(--shadow)] outline-none">
                 <div class="flex items-start justify-between gap-3"><div><p class="ui-eyebrow">Documento privado</p><h2 id="export-document-title" class="mt-1 text-lg font-semibold">Exportar documento</h2></div><button type="button" class="ui-button-ghost size-9 px-0" aria-label="Fechar exportação" :disabled="busy" @click="close"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
-                <p class="mt-3 text-sm leading-6 text-muted-foreground">Escolha o formato do estado atual salvo.</p>
+                <p class="mt-3 text-sm leading-6 text-muted-foreground">Escolha o formato para baixar o documento.</p>
                 <div class="mt-4 grid gap-2">
                     <button v-for="option in [{ value: 'txt', label: 'Texto', ext: '.txt' }, { value: 'markdown', label: 'Markdown', ext: '.md' }, { value: 'html', label: 'HTML', ext: '.html' }, { value: 'pdf', label: 'PDF', ext: '.pdf' }, { value: 'docx', label: 'Word', ext: '.docx' }]" :key="option.value" type="button" class="flex items-center justify-between border border-border p-3 text-left hover:bg-muted disabled:opacity-50" :disabled="busy" @click="emit('export', option.value)"><span class="font-semibold">{{ option.label }}</span><span class="text-xs text-muted-foreground">{{ option.ext }}</span></button>
                 </div>

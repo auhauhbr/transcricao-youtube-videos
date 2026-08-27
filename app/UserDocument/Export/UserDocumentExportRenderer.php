@@ -2,21 +2,19 @@
 
 namespace App\UserDocument\Export;
 
-use App\Models\UserDocument;
-
 final class UserDocumentExportRenderer
 {
-    public function text(UserDocument $document): string
+    public function text(UserDocumentExportData $document): string
     {
         return trim($this->renderNode($document->content, 'txt'))."\n";
     }
 
-    public function markdown(UserDocument $document): string
+    public function markdown(UserDocumentExportData $document): string
     {
         return trim($this->renderNode($document->content, 'md'))."\n";
     }
 
-    public function html(UserDocument $document): string
+    public function html(UserDocumentExportData $document): string
     {
         $title = htmlspecialchars($document->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $body = $this->renderNode($document->content, 'html');

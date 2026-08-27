@@ -135,8 +135,8 @@ const ensureSaved = async () => {
 const exportDocument = async (format) => {
     exportBusy.value = true;
     const saved = await ensureSaved();
-    if (!saved || lockVersion.value === null) {
-        showFeedback(saved ? 'Salve o documento antes de exportar.' : 'As alterações precisam ser salvas antes da exportação.');
+    if (!saved) {
+        showFeedback(status.value === 'conflict' ? 'Resolva o conflito antes de exportar.' : 'As alterações precisam ser salvas antes da exportação.');
         exportBusy.value = false;
         return;
     }
@@ -303,7 +303,7 @@ onBeforeUnmount(() => {
                         <label for="document-title" class="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Título do documento</label>
                         <input id="document-title" v-model="title" type="text" maxlength="255" class="ui-input mb-3 text-base font-semibold" @input="updateTitle" />
                         <DocumentEditor :content="content" @update:content="updateContent" />
-                        <p class="mt-3 text-xs leading-5 text-muted-foreground">Este documento é pessoal. Downloads atuais continuam usando a transcrição original.</p>
+                        <p class="mt-3 text-xs leading-5 text-muted-foreground">Este documento é pessoal e pode ser editado ou exportado nos formatos disponíveis.</p>
                     </section>
                 </div>
             </div>

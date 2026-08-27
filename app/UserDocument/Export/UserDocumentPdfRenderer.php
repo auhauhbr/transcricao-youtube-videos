@@ -2,13 +2,12 @@
 
 namespace App\UserDocument\Export;
 
-use App\Models\UserDocument;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 final class UserDocumentPdfRenderer
 {
-    public function render(UserDocument $document, UserDocumentExportRenderer $htmlRenderer): string
+    public function render(UserDocumentExportData $document, UserDocumentExportRenderer $htmlRenderer): string
     {
         $options = new Options;
         $options->set('isRemoteEnabled', false);
