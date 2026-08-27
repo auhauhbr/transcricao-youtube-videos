@@ -24,7 +24,7 @@ final class ResolveSocialUser
             }
 
             if (User::query()->where('email', $email)->exists()) {
-                throw new SocialLoginException('Já existe uma conta com este email. Entre pelo método usado anteriormente.');
+                throw new SocialLoginException('Não foi possível concluir o login externo com esta conta. Entre pelo método usado anteriormente.');
             }
 
             $user = User::query()->create([

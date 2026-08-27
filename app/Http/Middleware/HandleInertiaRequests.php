@@ -50,9 +50,7 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
             'auth' => [
                 'user' => $user === null ? null : [
-                    'id' => $user->getAuthIdentifier(),
                     'name' => $user->name,
-                    'email' => $user->email,
                 ],
             ],
             'anonymousQuota' => $user !== null || ! $guestIdentity instanceof GuestIdentity
