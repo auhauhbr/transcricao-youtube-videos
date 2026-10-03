@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -56,5 +57,11 @@ class UserTranscript extends Model
     public function document(): HasOne
     {
         return $this->hasOne(UserDocument::class);
+    }
+
+    /** @return HasMany<UserTranscriptAnnotation, $this> */
+    public function annotations(): HasMany
+    {
+        return $this->hasMany(UserTranscriptAnnotation::class)->orderBy('start_ms')->orderBy('type');
     }
 }
