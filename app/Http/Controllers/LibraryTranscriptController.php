@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\FindUserTranscript;
 use App\Actions\RemoveLibraryItems;
+use App\Support\UserTranscriptAnnotationPresenter;
 use App\Transcript\TranscriptResultPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,15 +18,17 @@ class LibraryTranscriptController extends Controller
         string $userTranscript,
         FindUserTranscript $findUserTranscript,
         TranscriptResultPresenter $presenter,
+        UserTranscriptAnnotationPresenter $annotationPresenter,
     ): Response {
         $item = $findUserTranscript->handle($request->user(), $userTranscript);
-        $item->load(['transcript.video', 'transcript.segments', 'transcript.chapters']);
+        $item->load(['annotations', 'transcript.video', 'transcript.segments', 'transcript.chapters']);
 
         return Inertia::render('Library/Show', [
             ...$presenter->present($item->transcript),
             'downloadUrl' => route('library.download', $item->public_id, absolute: false),
             'workspaceUrl' => route('library.workspace', $item->public_id, absolute: false),
             'backUrl' => route('library.index', absolute: false),
+            'annotations' => $annotationPresenter->forUserTranscript($item),
         ]);
     }
 
