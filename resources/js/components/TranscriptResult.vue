@@ -2,6 +2,9 @@
 import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
+import { useTranscriptAnnotations } from '../composables/useTranscriptAnnotations.js';
+import AnnotationControls from './AnnotationControls.vue';
+import FlashToast from './FlashToast.vue';
 import TranscriptDownloadDialog from './TranscriptDownloadDialog.vue';
 import VideoSummaryCard from './VideoSummaryCard.vue';
 
@@ -34,6 +37,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    annotations: {
+        type: Object,
+        default: null,
+    },
 });
 
 const copyMessage = ref('');
@@ -43,6 +50,9 @@ const currentTimeMs = ref(null);
 const transcriptPanel = ref(null);
 const videoCard = ref(null);
 const blockElements = new Map();
+const annotationFeedback = ref(null);
+const annotationFeedbackId = ref(0);
+const annotationState = useTranscriptAnnotations(props.annotations?.items || [], props.annotations?.urls || {});
 let scrollCancellationFrame = null;
 const fullTranscript = computed(() => props.transcript.blocks.map((block) => block.text).join('\n\n'));
 const languageLabel = computed(() => props.transcript.languageName || props.transcript.languageCode);
@@ -154,6 +164,14 @@ const seekTo = (startMs) => {
     videoCard.value?.seekTo(safeStartMs / 1000, true);
 };
 
+const toggleBookmark = async (startMs) => {
+    const hadBookmark = Boolean(annotationState.bookmarkAt(startMs));
+    const result = await annotationState.toggleBookmark(startMs);
+    if (result) {
+        annotationFeedback.value = hadBookmark ? 'Marcador removido.' : 'Marcador adicionado.';
+        annotationFeedbackId.value += 1;
+    }
+};
 const updateCurrentTime = (seconds) => {
     const numericSeconds = Number(seconds);
 
@@ -297,28 +315,34 @@ const copyTranscript = async () => {
                     >
                         {{ copyMessage }}
                     </p>
+                    <p v-if="annotationState.error" class="border-b border-border px-5 py-3 text-sm text-destructive" role="alert">{{ annotationState.error }}</p>
 
                     <div ref="transcriptPanel" class="divide-y divide-border lg:max-h-[calc(100vh-15rem)] lg:min-h-[30rem] lg:overflow-y-auto">
-                        <button
+                        <div
                             v-for="block in transcript.blocks"
                             :id="`transcript-block-${block.position}`"
                             :key="block.position"
                             :ref="(element) => setBlockElement(block.position, element)"
-                            type="button"
-                            class="group grid w-full scroll-mt-24 grid-cols-[58px_minmax(0,1fr)] gap-3 border-l-2 border-transparent px-4 py-3.5 text-left transition-colors hover:bg-muted/70 sm:grid-cols-[70px_minmax(0,1fr)] sm:gap-5 sm:px-5 sm:py-4"
+                            role="button"
+                            tabindex="0"
+                            class="group grid w-full scroll-mt-24 grid-cols-[58px_minmax(0,1fr)_auto] gap-3 border-l-2 border-transparent px-4 py-3.5 text-left transition-colors hover:bg-muted/70 sm:grid-cols-[70px_minmax(0,1fr)_auto] sm:gap-5 sm:px-5 sm:py-4"
                             :class="activeBlockPosition === block.position ? 'border-l-accent bg-accent/[0.07]' : ''"
                             :aria-current="activeBlockPosition === block.position ? 'true' : undefined"
                             :aria-label="`Reproduzir a partir de ${formatTimestamp(block.startMs)}: ${block.text}`"
                             @click="seekTo(block.startMs)"
+                            @keydown.enter.prevent="seekTo(block.startMs)"
+                            @keydown.space.prevent="seekTo(block.startMs)"
                         >
                             <span class="h-fit font-mono text-xs font-semibold text-accent group-hover:underline">
                                 {{ formatTimestamp(block.startMs) }}
                             </span>
                             <span class="min-w-0 text-sm leading-6 text-foreground/90 sm:text-[15px] sm:leading-7">{{ block.text }}</span>
-                        </button>
+                            <AnnotationControls v-if="annotations" :start-ms="block.startMs" :bookmarked="Boolean(annotationState.bookmarkAt(block.startMs))" :has-note="false" :disabled="annotationState.busy" @toggle-bookmark="toggleBookmark" />
+                        </div>
                     </div>
                 </section>
             </div>
         </div>
+        <FlashToast :flash-id="String(annotationFeedbackId)" :message="annotationFeedback" />
     </article>
 </template>

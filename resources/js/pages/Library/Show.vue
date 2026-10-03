@@ -10,6 +10,7 @@ defineProps({
     downloadUrl: { type: String, required: true },
     workspaceUrl: { type: String, required: true },
     backUrl: { type: String, required: true },
+    annotations: { type: Object, required: true },
 });
 </script>
 
@@ -25,6 +26,7 @@ defineProps({
             :download-url="downloadUrl"
             :workspace-url="workspaceUrl"
             :back-url="backUrl"
+            :annotations="annotations"
             back-label="Voltar à biblioteca"
         />
     </PublicLayout>
