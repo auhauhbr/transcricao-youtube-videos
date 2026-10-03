@@ -17,6 +17,7 @@ use App\Http\Controllers\SocialAuthenticationController;
 use App\Http\Controllers\UserDocumentDownloadController;
 use App\Http\Controllers\UserDocumentRevisionController;
 use App\Http\Controllers\UserDocumentWorkspaceController;
+use App\Http\Controllers\UserTranscriptAnnotationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -65,6 +66,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/library/items/tags', [LibraryBulkController::class, 'addTags'])->name('library.items.tags.add');
         Route::delete('/library/items/tags', [LibraryBulkController::class, 'removeTags'])->name('library.items.tags.remove');
         Route::delete('/library/items', [LibraryBulkController::class, 'destroy'])->name('library.items.destroy');
+        Route::post('/library/{userTranscript}/annotations', [UserTranscriptAnnotationController::class, 'store'])
+            ->whereUlid('userTranscript')
+            ->name('library.annotations.store');
+        Route::patch('/library/{userTranscript}/annotations/{annotation}', [UserTranscriptAnnotationController::class, 'update'])
+            ->whereUlid('userTranscript')
+            ->whereUlid('annotation')
+            ->name('library.annotations.update');
+        Route::delete('/library/{userTranscript}/annotations/{annotation}', [UserTranscriptAnnotationController::class, 'destroy'])
+            ->whereUlid('userTranscript')
+            ->whereUlid('annotation')
+            ->name('library.annotations.destroy');
         Route::get('/library/{userTranscript}/download', DownloadLibraryTranscriptController::class)
             ->whereUlid('userTranscript')
             ->name('library.download');
