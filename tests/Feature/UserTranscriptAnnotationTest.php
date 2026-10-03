@@ -9,8 +9,10 @@ use App\Models\User;
 use App\Models\UserTranscript;
 use App\Models\UserTranscriptAnnotation;
 use App\Models\Video;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -97,4 +99,59 @@ test('annotations are private and all cross user mutation attempts return not fo
     $this->actingAs($other)->patchJson(route('library.annotations.update', [$otherItem, $note]), ['text' => 'Invasão'])->assertNotFound();
     $this->actingAs($other)->deleteJson(route('library.annotations.destroy', [$otherItem, $note]))->assertNotFound();
     expect($note->refresh()->text)->toBe('Privada');
+});
+
+test('annotation props are only exposed to the owner in transcript and workspace views', function () {
+    $owner = User::factory()->create();
+    $other = User::factory()->create();
+    $item = annotationItem($owner);
+    UserTranscriptAnnotation::factory()->for($item, 'userTranscript')->create(['start_ms' => 30_000, 'type' => UserTranscriptAnnotationType::Note, 'text' => 'Ver no painel']);
+
+    $this->actingAs($owner)->get(route('library.show', $item))->assertInertia(fn (Assert $page) => $page
+        ->where('annotations.items.0.startMs', 30_000)
+        ->where('annotations.items.0.text', 'Ver no painel')
+        ->where('annotations.urls.store', "/library/{$item->public_id}/annotations")
+        ->missing('annotations.items.0.id')
+        ->missing('annotations.items.0.userTranscriptId')
+    );
+    $this->actingAs($owner)->get(route('library.workspace', $item))->assertInertia(fn (Assert $page) => $page
+        ->where('workspace.annotations.items.0.startMs', 30_000)
+        ->where('workspace.annotations.items.0.text', 'Ver no painel')
+    );
+    $this->actingAs($other)->get(route('library.show', $item))->assertNotFound();
+    $this->actingAs($other)->get(route('library.workspace', $item))->assertNotFound();
+});
+
+test('deleting a library item cascades annotations and never changes the original transcript', function () {
+    $user = User::factory()->create();
+    $item = annotationItem($user);
+    $transcriptId = $item->transcript_id;
+    UserTranscriptAnnotation::factory()->for($item, 'userTranscript')->bookmark()->create(['start_ms' => 0]);
+
+    $this->actingAs($user)->delete(route('library.destroy', $item))->assertRedirect(route('library.index'));
+
+    expect(UserTranscriptAnnotation::query()->count())->toBe(0)
+        ->and(Transcript::query()->whereKey($transcriptId)->exists())->toBeTrue()
+        ->and(TranscriptSegment::query()->where('transcript_id', $transcriptId)->count())->toBe(2);
+});
+
+test('database uniqueness prevents duplicate annotation types at the same timestamp', function () {
+    $item = annotationItem(User::factory()->create());
+    UserTranscriptAnnotation::factory()->for($item, 'userTranscript')->bookmark()->create(['start_ms' => 0]);
+
+    expect(fn () => UserTranscriptAnnotation::factory()->for($item, 'userTranscript')->bookmark()->create(['start_ms' => 0]))
+        ->toThrow(UniqueConstraintViolationException::class);
+});
+
+test('annotations are excluded from original and document exports and guests cannot access their endpoints', function () {
+    $owner = User::factory()->create();
+    $item = annotationItem($owner);
+    UserTranscriptAnnotation::factory()->for($item, 'userTranscript')->create(['start_ms' => 0, 'text' => 'Não exportar esta nota.']);
+
+    $this->actingAs($owner)->get(route('library.download', [$item, 'format' => 'txt', 'mode' => 'formatted', 'timestamps' => '1']))
+        ->assertOk()
+        ->assertDontSee('Não exportar esta nota.');
+    auth()->logout();
+    $this->postJson(annotationStoreUrl($item), ['start_ms' => 0, 'type' => 'bookmark'])->assertUnauthorized();
+    $this->get(route('library.show', $item))->assertRedirect(route('login'));
 });
