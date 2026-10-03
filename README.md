@@ -61,13 +61,13 @@ Uma decisão central do produto é separar claramente a fonte do conteúdo da
 edição do usuário:
 
 ```text
-Video → Transcript (original, imutável) → UserTranscript → UserDocument (privado e editável)
+Video → Transcript (original, imutável) → UserTranscript → UserDocument / annotations privadas
 ```
 
 O `Transcript` é a fonte original compartilhada internamente. O
-`UserDocument` pertence à relação privada `UserTranscript`; editar, restaurar
-ou exportar esse documento nunca modifica o vídeo, os segmentos, os capítulos
-ou o conteúdo de outro usuário.
+`UserDocument` e as annotations pertencem à relação privada `UserTranscript`;
+editar, restaurar, anotar ou exportar esse conteúdo nunca modifica o vídeo, os
+segmentos, os capítulos ou o conteúdo de outro usuário.
 
 ## Capturas de tela
 
@@ -181,6 +181,8 @@ O documento editado pode ser exportado em Texto, Markdown, HTML, PDF ou Word.
 - ordenação e paginação;
 - folders, tags e ações em massa;
 - acesso à visualização da fonte e ao Workspace.
+- marcadores e notas privadas por timestamp, disponíveis na fonte e no
+  Workspace sem alterar a transcrição original ou o documento editável.
 
 ### Workspace e histórico
 
@@ -222,6 +224,7 @@ flowchart TD
 | --- | --- |
 | `Video` / `Transcript` | Fonte global de vídeo e transcrição original, imutável para a edição do usuário. |
 | `UserTranscript` | Relação privada entre usuário e `Transcript`; base do owner scoping. |
+| `UserTranscriptAnnotation` | Marcador ou nota privada, ancorada no `start_ms` de um bloco da fonte. |
 | `UserDocument` | Documento Tiptap JSON editável, único por `UserTranscript`. |
 | `UserDocumentRevision` | Snapshot imutável de baseline, checkpoint, versão manual ou backup. |
 | `SocialAccount` | Identidade OAuth separada, sem tokens persistidos. |
