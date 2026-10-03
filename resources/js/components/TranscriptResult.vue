@@ -4,6 +4,8 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { formatTimestamp } from '../utils/formatTimestamp.js';
 import { useTranscriptAnnotations } from '../composables/useTranscriptAnnotations.js';
 import AnnotationControls from './AnnotationControls.vue';
+import AnnotationEditorDialog from './AnnotationEditorDialog.vue';
+import AnnotationsPanel from './AnnotationsPanel.vue';
 import FlashToast from './FlashToast.vue';
 import TranscriptDownloadDialog from './TranscriptDownloadDialog.vue';
 import VideoSummaryCard from './VideoSummaryCard.vue';
@@ -50,6 +52,8 @@ const currentTimeMs = ref(null);
 const transcriptPanel = ref(null);
 const videoCard = ref(null);
 const blockElements = new Map();
+const annotationsPanelOpen = ref(false);
+const annotationEditor = ref(null);
 const annotationFeedback = ref(null);
 const annotationFeedbackId = ref(0);
 const annotationState = useTranscriptAnnotations(props.annotations?.items || [], props.annotations?.urls || {});
@@ -164,6 +168,19 @@ const seekTo = (startMs) => {
     videoCard.value?.seekTo(safeStartMs / 1000, true);
 };
 
+const openNoteEditor = (startMs) => {
+    const note = annotationState.noteAt(startMs);
+    annotationEditor.value = { startMs, annotation: note, text: note?.text || '' };
+};
+const saveNote = async (text) => {
+    if (!annotationEditor.value) return;
+    const result = await annotationState.saveNote(annotationEditor.value.startMs, text, annotationEditor.value.annotation);
+    if (result) {
+        annotationEditor.value = null;
+        annotationFeedback.value = 'Nota salva.';
+        annotationFeedbackId.value += 1;
+    }
+};
 const toggleBookmark = async (startMs) => {
     const hadBookmark = Boolean(annotationState.bookmarkAt(startMs));
     const result = await annotationState.toggleBookmark(startMs);
@@ -172,6 +189,21 @@ const toggleBookmark = async (startMs) => {
         annotationFeedbackId.value += 1;
     }
 };
+const removeAnnotation = async (annotation) => {
+    const result = await annotationState.remove(annotation);
+    if (result) {
+        annotationFeedback.value = annotation.type === 'note' ? 'Nota excluída.' : 'Marcador removido.';
+        annotationFeedbackId.value += 1;
+    }
+};
+const navigateToAnnotation = (startMs) => {
+    const block = props.transcript.blocks.find((item) => item.startMs === startMs);
+    if (!block) return;
+    seekTo(startMs);
+    scrollToBlock(block.position);
+    annotationsPanelOpen.value = false;
+};
+
 const updateCurrentTime = (seconds) => {
     const numericSeconds = Number(seconds);
 
@@ -287,6 +319,7 @@ const copyTranscript = async () => {
                             </p>
                         </div>
                         <div class="flex shrink-0 flex-wrap items-center gap-2">
+                            <button v-if="annotations" type="button" class="ui-button-secondary" aria-label="Abrir notas e marcadores" @click="annotationsPanelOpen = true"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> Notas</button>
                             <button
                                 type="button"
                                 class="ui-button-secondary"
@@ -337,12 +370,14 @@ const copyTranscript = async () => {
                                 {{ formatTimestamp(block.startMs) }}
                             </span>
                             <span class="min-w-0 text-sm leading-6 text-foreground/90 sm:text-[15px] sm:leading-7">{{ block.text }}</span>
-                            <AnnotationControls v-if="annotations" :start-ms="block.startMs" :bookmarked="Boolean(annotationState.bookmarkAt(block.startMs))" :has-note="false" :disabled="annotationState.busy" @toggle-bookmark="toggleBookmark" />
+                            <AnnotationControls v-if="annotations" :start-ms="block.startMs" :bookmarked="Boolean(annotationState.bookmarkAt(block.startMs))" :has-note="Boolean(annotationState.noteAt(block.startMs))" :disabled="annotationState.busy" @toggle-bookmark="toggleBookmark" @edit-note="openNoteEditor" />
                         </div>
                     </div>
                 </section>
             </div>
         </div>
+        <AnnotationsPanel v-if="annotations" :open="annotationsPanelOpen" :items="annotationState.items" :busy="annotationState.busy" @close="annotationsPanelOpen = false" @navigate="navigateToAnnotation" @edit-note="openNoteEditor" @delete="removeAnnotation" @toggle-bookmark="toggleBookmark" />
+        <AnnotationEditorDialog v-if="annotations" :open="Boolean(annotationEditor)" :start-ms="annotationEditor?.startMs" :text="annotationEditor?.text || ''" :busy="annotationState.busy" @cancel="annotationEditor = null" @save="saveNote" />
         <FlashToast :flash-id="String(annotationFeedbackId)" :message="annotationFeedback" />
     </article>
 </template>

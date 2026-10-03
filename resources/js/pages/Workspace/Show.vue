@@ -285,7 +285,7 @@ onBeforeUnmount(() => {
 
                 <div class="mt-5 grid min-w-0 gap-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                     <div id="source-panel" role="tabpanel" aria-labelledby="source-tab" class="min-w-0" :class="activeMobilePanel === 'source' ? 'block' : 'hidden lg:block'">
-                        <WorkspaceSource :source="workspace.source" />
+                        <WorkspaceSource :source="workspace.source" :annotations="workspace.annotations" />
                     </div>
                     <section id="document-panel" role="tabpanel" aria-labelledby="document-tab document-panel-title" class="min-w-0" :class="activeMobilePanel === 'document' ? 'block' : 'hidden lg:block'">
                         <div class="mb-3 flex flex-wrap items-end justify-between gap-3">

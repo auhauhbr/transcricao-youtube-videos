@@ -8,6 +8,7 @@ use App\Actions\SaveUserDocument;
 use App\Exceptions\UserDocumentConflictException;
 use App\Http\Requests\SaveUserDocumentRequest;
 use App\Support\UserDocumentPresenter;
+use App\Support\UserTranscriptAnnotationPresenter;
 use App\Transcript\TranscriptResultPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,9 +24,10 @@ class UserDocumentWorkspaceController extends Controller
         TranscriptResultPresenter $transcriptPresenter,
         BuildUserDocumentSeed $seedBuilder,
         UserDocumentPresenter $documentPresenter,
+        UserTranscriptAnnotationPresenter $annotationPresenter,
     ): Response {
         $item = $findUserTranscript->handle($request->user(), $userTranscript);
-        $item->load(['document', 'transcript.video', 'transcript.segments', 'transcript.chapters']);
+        $item->load(['annotations', 'document', 'transcript.video', 'transcript.segments', 'transcript.chapters']);
         $source = $transcriptPresenter->present($item->transcript);
 
         return Inertia::render('Workspace/Show', [
@@ -34,6 +36,7 @@ class UserDocumentWorkspaceController extends Controller
                 'document' => $item->document === null ? null : $documentPresenter->document($item->document),
                 'seed' => $item->document === null ? $seedBuilder->handle($item->transcript) : null,
                 'source' => $source,
+                'annotations' => $annotationPresenter->forUserTranscript($item),
                 'urls' => [
                     'save' => route('library.document.update', $item->public_id, absolute: false),
                     'export' => route('library.document.download', $item->public_id, absolute: false),
